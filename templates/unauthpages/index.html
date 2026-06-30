@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Portal</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .carousel-item img {
+            height: 100vh;
+            object-fit: cover;
+        }
+
+        .carousel-caption {
+            bottom: 20%;
+        }
+
+        .carousel-caption h1,
+        .carousel-caption p {
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .carousel-caption a {
+            margin: 5px;
+            padding: 10px 20px;
+            color: white;
+            background-color: rgba(0, 123, 255, 0.8);
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .carousel-caption a:hover {
+            background-color: rgba(0, 123, 255, 1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Carousel -->
+    <div id="carouselExample" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-inner">
+
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <img src="{% static 'homebg.jpeg' %}" class="d-block w-100" alt="Slide 1">
+                <div class="carousel-caption text-center text-white">
+                    <h1>Welcome to Placement Portal</h1>
+                    <p>Launch your career with confidence.</p>
+                    <a href="{%url 'app:login' %}">Login</a>
+                    <a href="{%url 'app:register' %}">Register</a>
+                </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <img src="{% static 'homebg.jpeg' %}" class="d-block w-100" alt="Slide 2">
+                <div class="carousel-caption text-center text-white">
+                    <h1>Connect with Opportunities</h1>
+                    <p>Internships, jobs, and more.</p>
+                    <a href="{%url 'app:login' %}">Login</a>
+                    <a href="{%url 'app:register' %}">Register</a>
+                </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <img src="{% static 'homebg.jpeg' %}" class="d-block w-100" alt="Slide 3">
+                <div class="carousel-caption text-center text-white">
+                    <h1>Build Your Future</h1>
+                    <p>Resume tips, interview prep, and career guidance.</p>
+                    <a href="{% url 'app:login' %}">Login</a>
+                    <a href="{% url 'app:register' %}">Register</a>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auto-play config -->
+    <script>
+        const myCarousel = document.querySelector('#carouselExample');
+        new bootstrap.Carousel(myCarousel, {
+            interval: 5000,  // 5 seconds
+            ride: 'carousel',
+            pause: false     // don't pause on hover
+        });
+    </script>
+
+</body>
+
+</html>

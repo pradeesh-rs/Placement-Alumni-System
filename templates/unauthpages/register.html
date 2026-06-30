@@ -1,0 +1,374 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registration - Placement Portal</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --input-bg: rgba(255, 255, 255, 0.85);
+      --text-color: #222;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: url("{% static 'homebg.jpeg' %}") no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .register-container {
+      width: 92%;
+      max-width: 480px;
+      padding: 1.5rem;
+      margin: 2rem auto;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(15px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      animation: slideFade 0.9s ease-out forwards;
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+
+    @keyframes slideFade {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control,
+    .form-select {
+      background-color: var(--input-bg);
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #000;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .form-control::placeholder {
+      color: #555;
+      opacity: 0.8;
+      font-size: 0.9rem;
+    }
+
+    .register-btn {
+      background: linear-gradient(135deg, #007bff, #00bfff);
+      border: none;
+      color: white;
+      padding: 12px;
+      font-weight: bold;
+      border-radius: 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-size: 1rem;
+    }
+
+    .register-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+    }
+
+    /* Role-specific fields container */
+    .role-fields {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+      .register-container {
+        padding: 1.2rem;
+        margin: 1rem auto;
+        width: 95%;
+      }
+
+      .form-control,
+      .form-select {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+      }
+
+      .register-btn {
+        padding: 10px;
+        font-size: 0.95rem;
+      }
+
+      h3 {
+        font-size: 1.4rem;
+        margin-bottom: 1.2rem !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .register-container {
+        padding: 1rem;
+      }
+
+      .form-label {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  {% if messages %}
+  {% for message in messages %}
+  <div id="loginToast" class="toast align-items-center border-0 position-fixed bottom-0 end-0 m-3 m-sm-4 
+           {% if message.tags == 'success' %}text-bg-success
+           {% elif message.tags == 'error' or message.tags == 'danger' %}text-bg-danger
+           {% elif message.tags == 'warning' %}text-bg-warning
+           {% elif message.tags == 'info' %}text-bg-info
+           {% else %}text-bg-primary
+           {% endif %}" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">
+        {{ message }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <div class="register-container">
+    <h3 class="text-center mb-4">Create Account</h3>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" required placeholder="Create username">
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="password1" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password1" name="password1" required
+            placeholder="Create password">
+
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label for="password2" class="form-label">Confirm Password</label>
+          <input type="password" class="form-control" id="password2" name="password2" required
+            placeholder="Re-enter password">
+        </div>
+        <small id="passwordHelp" class="text-danger fw-bold d-none">
+          Password must be at least 8 characters and include letters, numbers, and special characters.
+        </small>
+      </div>
+
+      <div class="mb-3">
+        <label for="user_type" class="form-label">Register As</label>
+        <select class="form-select" id="user_type" name="user_type" required>
+          <option value="" disabled selected>Select account type</option>
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+          <option value="company">Company</option>
+        </select>
+      </div>
+
+      <!-- Student Fields -->
+      <div id="studentFields" class="role-fields">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="student_degree_program" class="form-label">Degree Program</label>
+            <select class="form-select" id="student_degree_program" name="student_degree_program">
+              <option value="" disabled selected>Select program</option>
+              {% for degree, branches in degrees_list.items %}
+              <option value="{{ degree }}">{{ degree }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="student_branch" class="form-label">Branch</label>
+            <select class="form-select" id="student_branch" name="student_branch" disabled>
+              <option value="">Select branch</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teacher Fields -->
+      <div id="teacherFields" class="role-fields">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="teacher_degree_program" class="form-label">Department</label>
+            <select class="form-select" id="teacher_degree_program" name="degree_program">
+              <option value="" disabled selected>Select program</option>
+              {% for degree, branches in degrees_list.items %}
+              <option value="{{ degree }}">{{ degree }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="teacher_branch" class="form-label">Specialization</label>
+            <select class="form-select" id="teacher_branch" name="branch" disabled>
+              <option value="">Select branch</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-grid mb-3">
+        <button type="submit" class="btn register-btn">Register</button>
+      </div>
+
+      <p class="text-center" style="color: var(--text-color); font-weight: 500;">
+        Already have an account?
+        <a href="{% url 'app:login' %}" style="color: #050606; font-weight: 600; text-decoration: none;">
+          Login
+        </a>
+      </p>
+    </form>
+  </div>
+
+  <script>
+
+    const passwordInput = document.getElementById('password1');
+    const passwordHelp = document.getElementById('passwordHelp');
+    const form = document.querySelector('form');
+
+    function isStrongPassword(password) {
+      const minLength = password.length >= 8;
+      const hasLetter = /[A-Za-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+      return minLength && hasLetter && hasNumber && hasSpecial;
+    }
+
+    passwordInput.addEventListener('input', () => {
+      if (!isStrongPassword(passwordInput.value)) {
+        passwordInput.classList.add('is-invalid');
+        passwordHelp.classList.remove('d-none');
+      } else {
+        passwordInput.classList.remove('is-invalid');
+        passwordHelp.classList.add('d-none');
+      }
+    });
+
+    form.addEventListener('submit', (e) => {
+      if (!isStrongPassword(passwordInput.value)) {
+        e.preventDefault();
+        passwordInput.focus();
+      }
+    });
+    // Degree programs data structure
+    const degreePrograms = JSON.parse('{{ degrees|escapejs }}');
+    console.log("Properly parsed degree programs:", degreePrograms);
+
+    window.addEventListener('DOMContentLoaded', (event) => {
+      // Toast notification
+      const toastEl = document.getElementById('loginToast');
+      if (toastEl) {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      }
+
+      // User type selection
+      const userTypeSelect = document.getElementById('user_type');
+      const studentFields = document.getElementById('studentFields');
+      const teacherFields = document.getElementById('teacherFields');
+
+      // Student degree and branch selection
+      const studentDegreeSelect = document.getElementById('student_degree_program');
+      const studentBranchSelect = document.getElementById('student_branch');
+
+      // Teacher degree and branch selection
+      const teacherDegreeSelect = document.getElementById('teacher_degree_program');
+      const teacherBranchSelect = document.getElementById('teacher_branch');
+
+      userTypeSelect.addEventListener('change', function () {
+        // Hide all role-specific fields first
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'none';
+
+        // Show fields based on selected role
+        if (this.value === 'student') {
+          studentFields.style.display = 'block';
+        } else if (this.value === 'teacher') {
+          teacherFields.style.display = 'block';
+        }
+      });
+
+      // Student degree program selection handler
+      if (studentDegreeSelect && studentBranchSelect) {
+        studentDegreeSelect.addEventListener('change', function () {
+          const selectedProgram = this.value;
+          studentBranchSelect.innerHTML = '<option value="">Select branch</option>';
+
+          if (selectedProgram) {
+            studentBranchSelect.disabled = false;
+            degreePrograms[selectedProgram].forEach(branch => {
+              const option = document.createElement('option');
+              option.value = branch;
+              option.textContent = branch;
+              studentBranchSelect.appendChild(option);
+            });
+          } else {
+            studentBranchSelect.disabled = true;
+          }
+        });
+      }
+
+      // Teacher degree program selection handler
+      if (teacherDegreeSelect && teacherBranchSelect) {
+        teacherDegreeSelect.addEventListener('change', function () {
+          const selectedProgram = this.value;
+          teacherBranchSelect.innerHTML = '<option value="">Select branch</option>';
+
+          if (selectedProgram) {
+            teacherBranchSelect.disabled = false;
+            degreePrograms[selectedProgram].forEach(branch => {
+              const option = document.createElement('option');
+              option.value = branch;
+              option.textContent = branch;
+              teacherBranchSelect.appendChild(option);
+            });
+          } else {
+            teacherBranchSelect.disabled = true;
+          }
+        });
+      }
+    });
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

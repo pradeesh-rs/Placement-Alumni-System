@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}Placement Training{% endblock %}
+{% block page %}Placement Training{% endblock %}
+{% block Main_title %}Placement Training{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-primary">
+      <i class="bi bi-mortarboard"></i> Placement Trainings
+    </h3>
+    <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadTrainingModal">
+      <i class="bi bi-cloud-upload"></i> Upload Training
+    </button>
+  </div>
+
+  <!-- ================= ADD TRAINING MODAL ================= -->
+  <div class="modal fade" id="uploadTrainingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">New Training</h5>
+            <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <label class="fw-semibold">Title</label>
+            <input type="text" name="title" class="form-control mb-3" required>
+
+            <label class="fw-semibold">Description</label>
+            <textarea name="description" class="form-control mb-3"></textarea>
+
+            <label class="fw-semibold">Training Type</label>
+            <select name="training_type" id="training_type" class="form-select mb-3" required>
+              <option value="">-- Select Type --</option>
+              <option value="video">🎥 Video</option>
+              <option value="quiz">📄 Quiz (Link)</option>
+              <option value="meet">🔗 Google Meet</option>
+            </select>
+
+            <!-- FILE -->
+            <div id="fileUploadGroup">
+              <label class="fw-semibold">Upload File</label>
+              <input type="file" name="file" id="file" class="form-control">
+            </div>
+
+            <!-- MEET -->
+            <div id="meetScheduleGroup" class="d-none">
+              <label class="fw-semibold mt-2">Meeting Date & Time</label>
+              <input type="datetime-local" name="meet_date" class="form-control mb-2">
+
+              <label class="fw-semibold">Meeting Link</label>
+              <input type="url" name="meet_link" class="form-control" placeholder="https://meet.google.com/...">
+            </div>
+
+            <!-- QUIZ LINK -->
+            <div id="quizLinkGroup" class="d-none">
+              <label class="fw-semibold">Quiz Link (Google Form or other)</label>
+              <input type="url" name="quiz_link" class="form-control" placeholder="https://forms.gle/...">
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-success">Upload</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- ================= END ADD MODAL ================= -->
+
+  <!-- ================= TRAININGS ================= -->
+  <div class="row g-4">
+    {% for training in trainings %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h5 class="fw-bold">{{ training.title }}</h5>
+          <p class="text-muted small">{{ training.description|truncatechars:80 }}</p>
+
+          {% if training.vedio %}
+          <span class="badge bg-primary">🎥 Video</span>
+          {% elif training.quiz_link %}
+          <span class="badge bg-warning text-dark">📄 Quiz</span>
+          {% elif training.gogle_meet_link %}
+          <span class="badge bg-success">📅 Google Meet</span>
+          {% endif %}
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#view{{ training.id }}">
+            <i class="bi bi-eye"></i> View
+          </button>
+
+          <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#edit{{ training.id }}">
+            <i class="bi bi-pencil"></i>
+          </button>
+
+          <form method="post" action="{% url 'teacher:delete_training' training.id %}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete {{ training.title }}?');">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= VIEW MODAL ================= -->
+    <div class="modal fade" id="view{{ training.id }}" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Training Details</h5>
+            <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <p><strong>Title:</strong> {{ training.title }}</p>
+            <p><strong>Description:</strong> {{ training.description }}</p>
+
+            {% if training.vedio %}
+            <p><strong>Video File:</strong> {{ training.vedio.name }}</p>
+            <video controls class="w-100 rounded">
+              <source src="{{ training.vedio.url }}">
+            </video>
+
+            {% elif training.quiz_link %}
+            <p><strong>Quiz Link:</strong>
+              <a href="{{ training.quiz_link }}" target="_blank">
+                {{ training.quiz_link }}
+              </a>
+            </p>
+            {% elif training.gogle_meet_link %}
+            <p><strong>Date & Time:</strong> {{ training.date }}</p>
+            <p><strong>Meet Link:</strong>
+              <a href="{{ training.gogle_meet_link }}" target="_blank">
+                {{ training.gogle_meet_link }}
+              </a>
+            </p>
+            {% endif %}
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= EDIT MODAL ================= -->
+    <div class="modal fade" id="edit{{ training.id }}" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <form method="post" enctype="multipart/form-data" action="{% url 'teacher:edit_training' %}">
+            {% csrf_token %}
+            <input type="hidden" name="training_id" value="{{ training.id }}">
+
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title">Edit Training</h5>
+              <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <label class="fw-semibold">Title</label>
+              <input type="text" name="title" value="{{ training.title }}" class="form-control mb-3">
+
+              <label class="fw-semibold">Description</label>
+              <textarea name="description" class="form-control mb-3">{{ training.description }}</textarea>
+
+              {% if training.gogle_meet_link %}
+              <label class="fw-semibold">Meeting Date & Time</label>
+              <input type="datetime-local" name="meet_date" value="{{ training.date|date:'Y-m-d\\TH:i' }}"
+                class="form-control mb-3">
+
+              <input type="url" name="meet_link" value="{{ training.gogle_meet_link }}" class="form-control">
+              {% elif training.quiz_link %}
+              <label class="fw-semibold">Quiz Link</label>
+              <input type="url" name="quiz_link" value="{{ training.quiz_link }}" class="form-control">
+              {% else %}
+              <label class="fw-semibold">Replace File</label>
+              <input type="file" name="file" class="form-control">
+              {% endif %}
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button class="btn btn-warning">Update</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% empty %}
+    <div class="alert alert-info text-center">
+      No trainings uploaded yet.
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ================= TOGGLE SCRIPT ================= -->
+<script>
+  document.getElementById('training_type').addEventListener('change', function () {
+    document.getElementById('fileUploadGroup').classList.toggle('d-none', this.value === 'meet' || this.value === 'quiz');
+    document.getElementById('meetScheduleGroup').classList.toggle('d-none', this.value !== 'meet');
+    document.getElementById('quizLinkGroup').classList.toggle('d-none', this.value !== 'quiz');
+  });
+</script>
+
+{% endblock %}

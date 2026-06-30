@@ -1,0 +1,1161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #e6f0ff;
+        --secondary: #3a0ca3;
+        --dark: #212529;
+        --light: #f8f9fa;
+        --gray: #6c757d;
+        --border-radius: 12px;
+        --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+        background-color: #f5f7fb;
+        color: var(--dark);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        border: none;
+        overflow: visible;
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 2rem;
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid white;
+        object-fit: cover;
+        box-shadow: var(--box-shadow);
+        margin-top: -60px;
+        background-color: white;
+    }
+
+    .profile-actions .btn {
+        border-radius: 50px;
+        font-weight: 500;
+        padding: 8px 20px;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        border: none;
+        transition: transform 0.2s;
+    }
+
+    .detail-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .detail-card .card-title {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .section-title {
+        color: var(--primary);
+        font-weight: 600;
+        position: relative;
+        padding-bottom: 10px;
+    }
+
+    .section-title:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 50px;
+        height: 3px;
+        background: var(--primary);
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: var(--primary);
+    }
+
+    .nav-pills .nav-link {
+        color: var(--dark);
+        font-weight: 500;
+    }
+
+    /* Job details section */
+    .job-badge {
+        background-color: var(--primary-light);
+        color: var(--primary);
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Passed out badge */
+    .passed-out-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Edit Modal Styles */
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    }
+
+    .modal-body {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 10px 15px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+    #profilePreview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #f0f0f0;
+    }
+    .avatar-upload {
+        position: relative;
+        display: inline-block;
+    }
+
+    .avatar-upload .edit {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: var(--box-shadow);
+    }
+
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #f0f0f0;
+    }
+
+    /* Center the image in modal */
+    .avatar-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Academic info row styling */
+    .academic-row {
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+
+    .academic-row.disabled {
+        opacity: 0.6;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .profile-header {
+            text-align: center;
+        }
+
+        .profile-avatar {
+            margin: -60px auto 20px auto;
+        }
+
+        .profile-actions {
+            justify-content: center !important;
+            margin-bottom: 20px;
+        }
+        
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+        
+        .modal-body {
+            padding: 1rem;
+        }
+    }
+
+    .form-check-input {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        width: 1.2em;
+        height: 1.2em;
+        border: 2px solid #adb5bd;
+        border-radius: 0.25em;
+        cursor: pointer;
+        position: relative;
+        background-color: white;
+    }
+
+    .form-check-input:checked {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .form-check-input:checked::after {
+        content: "✓";
+        color: white;
+        font-size: 0.9em;
+        font-weight: 700;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -60%);
+    }
+
+    .form-check-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+
+    /* Marksheet Upload Styles */
+    .marksheet-upload-container {
+        margin-top: 15px;
+    }
+
+    .marksheet-preview {
+        max-width: 100%;
+        max-height: 200px;
+        height: auto;
+        object-fit: contain;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        border: 2px dashed #dee2e6;
+        padding: 5px;
+    }
+
+    .upload-area {
+        border: 2px dashed #4361ee;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+        background-color: #e6f0ff;
+        border-color: #3a0ca3;
+    }
+
+    .upload-area.drag-over {
+        background-color: #e6f0ff;
+        border-color: #3a0ca3;
+        transform: scale(1.02);
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+        color: #4361ee;
+        margin-bottom: 10px;
+    }
+
+    /* Modal for viewing marksheets */
+    .marksheet-modal .modal-dialog {
+        max-width: 800px;
+    }
+
+    .marksheet-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .marksheet-item {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .marksheet-item:hover {
+        transform: translateY(-5px);
+    }
+
+    .marksheet-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .marksheet-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 5px;
+    }
+
+    .marksheet-actions .btn {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .academic-row.disabled .form-select,
+    .academic-row.disabled .form-control {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+        border-color: #dee2e6;
+    }
+
+    .passed-out-checkbox-container {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #e0e0e0;
+    }
+</style>
+{% endblock %}
+
+{% block page %}Profile{% endblock %}
+{% block Main_title %}Student Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if student %}
+    <div class="profile-card mb-4">
+        <div class="profile-header d-flex flex-column flex-md-row justify-content-between align-items-md-end">
+            <div class="d-flex flex-column flex-md-row align-items-md-center">
+                <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={{ student.name|urlencode }}&background=4361ee&color=fff&size=150{% endif %}"
+                    class="profile-avatar me-md-4" width="150" height="150" alt="Profile Picture">
+                <div>
+                    <h1 class="h3 mb-1">{{ student.name }}</h1>
+                    <p class="mb-0 opacity-75">{{ student.course }} in {{ student.branch }}</p>
+                    <div class="mt-2">
+                        {% if student.is_passed_out %}
+                        <span class="passed-out-badge me-2">Passed Out</span>
+                        {% endif %}
+                        {% if student.job_info.all.0.job_title %}
+                        <span class="job-badge">{{ student.job_info.all.0.job_title }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="profile-actions d-flex mt-3 mt-md-0">
+                <button class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="bi bi-pencil-fill me-1"></i> Edit Profile
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Personal Information</h5>
+                        <ul class="list-unstyled mt-3">
+                            <li class="mb-2"><strong>Email:</strong> {{ student.email }}</li>
+                            <li class="mb-2"><strong>Phone:</strong> {{ student.phone }}</li>
+                            <li class="mb-2"><strong>Date of Birth:</strong> {{ student.date_of_birth }}</li>
+                            <li class="mb-2"><strong>Gender:</strong> {{ student.gender }}</li>
+                            <li class="mb-2"><strong>Blood Group:</strong> {{ student.blood_group }}</li>
+                            <li class="mb-2"><strong>Status:</strong>
+                                {% if student.is_passed_out %}
+                                <span class="text-success">Passed Out</span>
+                                {% else %}
+                                <span class="text-primary">Current Student</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Academic Information</h5>
+                        <ul class="list-unstyled mt-3">
+                            <li class="mb-2"><strong>Course:</strong> {{ student.course }}</li>
+                            <li class="mb-2"><strong>Branch:</strong> {{ student.branch }}</li>
+                            {% if not student.is_passed_out %}
+                            <li class="mb-2"><strong>Year:</strong> Year {{ student.year }}</li>
+                            <li class="mb-2"><strong>Semester:</strong> Semester {{ student.sem }}</li>
+                            {% endif %}
+                            <li class="mb-2"><strong>CGPA:</strong> {{ student.cgpa|default:"0.00" }}
+                                <a href="{% url 'student:cgpa_calculator' %}" class="btn btn-sm btn-outline-primary ms-2 py-0 px-2" style="font-size: 0.75rem;">
+                                    <i class="bi bi-calculator"></i> Calculate
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Identification</h5>
+                        <ul class="list-unstyled mt-3">
+                            <li class="mb-2"><strong>Roll No:</strong> {{ student.roll_no }}</li>
+                            <li class="mb-2"><strong>Register No:</strong> {{ student.reg_no }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Academic Performance Breakdown -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="detail-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Academic Performance Breakdown</h5>
+                            <a href="{% url 'student:cgpa_calculator' %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i> Manage Grades
+                            </a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Semester</th>
+                                        <th>SGPA</th>
+                                        <th>Credits</th>
+                                        <th class="text-end">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if student.semester_grades.all %}
+                                        {% for res in student.semester_grades.all %}
+                                        <tr>
+                                            <td class="fw-medium">{{ res.semester_name }}</td>
+                                            <td><span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">{{ res.sgpa|floatformat:2 }}</span></td>
+                                            <td>{{ res.total_credits }}</td>
+                                            <td class="text-end text-muted small">Updated {{ res.date_added|timesince }} ago</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                <i class="bi bi-info-circle me-2"></i>No detailed semester records found. Use the calculator to add your performance data.
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Details Section - Only show if job details exist -->
+            {% if student.job_info.all.0.job_title %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="detail-card p-4">
+                        <h5 class="card-title mb-3">Employment Details</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <strong>Job Title:</strong>
+                                <p class="mb-0">{{ student.job_info.all.0.job_title }}</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <strong>Company:</strong>
+                                <p class="mb-0">{{ student.job_info.all.0.company_name }}</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <strong>Location:</strong>
+                                <p class="mb-0">{{ student.job_info.all.0.company_location }}</p>
+                            </div>
+                            {% if student.job_info.all.0.salary %}
+                            <div class="col-md-4 mb-3">
+                                <strong>Salary:</strong>
+                                <p class="mb-0">{{ student.job_info.all.0.salary }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Address</h5>
+                        <p class="mt-2">{{ student.address }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Documents</h5>
+                        <div class="mt-2">
+                            {% if student.resume %}
+                            <div class="mb-3">
+                                <a href="{{ student.resume.url }}" target="_blank"
+                                    class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="bi bi-eye-fill me-1"></i> View Resume
+                                </a>
+                                <a href="{{ student.resume.url }}" download class="btn btn-primary btn-sm">
+                                    <i class="bi bi-download me-1"></i> Download Resume
+                                </a>
+                            </div>
+                            {% else %}
+                            <p class="text-muted mb-3">No resume uploaded</p>
+                            {% endif %}
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="profile-card text-center p-5">
+        <div class="mb-4">
+            <img src="https://ui-avatars.com/api/?name={{request.user}}&background=4361ee&color=fff&size=150"
+                class="profile-avatar" alt="Profile Picture">
+        </div>
+        <h3 class="mb-3">No Profile Found</h3>
+        <p class="text-muted mb-4">You haven't created your student profile yet. Click the button below to get started.
+        </p>
+        <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+            <i class="bi bi-plus-circle-fill me-2"></i> Create Profile
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProfileModalLabel">{% if student %}Edit{% else %}Create{% endif %}
+                        Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                {% if student %}
+                <input type="hidden" name="hide" value="edit">
+                {% endif %}
+                <div class="modal-body">
+                    <!-- Centered Image Container -->
+                    <div class="avatar-container text-center">
+                        <div class="avatar-upload">
+                            <img id="profilePreview"
+                                src="{% if student and student.profile_picture %}{{ student.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={% if student %}{{ student.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=4361ee&color=fff&size=150{% endif %}"
+                                class="avatar-preview img-fluid" width="150" height="150" alt="Profile Preview">
+                            <div class="edit">
+                                <i class="bi bi-camera-fill"></i>
+                                <input type="file" name="profile_picture" id="id_profile_picture" class="d-none"
+                                    accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mb-4 small text-muted">JPG or PNG, max 2MB</div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" name="name" value="{{ student.name|default:'' }}" class="form-control"
+                                required>
+                            <div class="invalid-feedback">
+                                Please enter your full name.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" value="{{ student.email|default:'' }}" class="form-control"
+                                required>
+                            <div class="invalid-feedback">
+                                Please enter a valid email address.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone *</label>
+                            <input type="tel" name="phone" value="{{ student.phone|default:'' }}" class="form-control"
+                                required>
+                            <div class="invalid-feedback">
+                                Please enter your phone number.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date of Birth *</label>
+                            <input type="date" name="date_of_birth" value="{{ student.date_of_birth|date:'Y-m-d' }}"
+                                class="form-control" required>
+                            <div class="invalid-feedback">
+                                Please select your date of birth.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Gender *</label>
+                            <select name="gender" class="form-select" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male" {% if student.gender == "Male" %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if student.gender == "Female" %}selected{% endif %}>Female
+                                </option>
+                                <option value="Other" {% if student.gender == "Other" %}selected{% endif %}>Other</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select your gender.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Blood Group *</label>
+                            <select name="blood_group" class="form-select" required>
+                                <option value="">Select Blood Group</option>
+                                {% for group in blood_groups %}
+                                <option value="{{ group }}" {% if student.blood_group == group %}selected{% endif %}>{{group }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select your blood group.
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Address *</label>
+                            <textarea name="address" class="form-control" rows="2"
+                                required>{{ student.address|default:'' }}</textarea>
+                            <div class="invalid-feedback">
+                                Please enter your address.
+                            </div>
+                        </div>
+
+                        <!-- Academic Information -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Course *</label>
+                            <select name="course" class="form-select" required id="degree_program" {% if student and student.is_passed_out %}disabled{% endif %}>
+                                <option value="">Select Course</option>
+                                {% for degree in degrees_list %}
+                                <option value="{{ degree }}" {% if student.course == degree %}selected{% endif %}>{{degree }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select your course.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="branch" class="form-label">Branch *</label>
+                            <select class="form-select" id="branch" name="branch" required {% if student and student.is_passed_out %}disabled{% endif %}>
+                                <option value="">Select branch</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select your branch.
+                            </div>
+                        </div>
+
+                        <!-- Passed Out Checkbox Container -->
+                        <div class="col-12">
+                            <div class="passed-out-checkbox-container">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" id="is_passed_out"
+                                        name="is_passed_out" {% if student.is_passed_out %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_passed_out">
+                                        Passed Out (Alumni)
+                                    </label>
+                                </div>
+                                <small class="text-muted">
+                                    {% if student and student.is_passed_out %}
+                                    <i class="bi bi-info-circle-fill me-1"></i>Academic records are locked for alumni.
+                                    {% else %}
+                                    Check this if you have completed your studies...
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Academic Information Row -->
+                        <div class="academic-row row" id="academicRow">
+                            <div class="col-md-3 mb-3" id="yearField">
+                                <label class="form-label">Year *</label>
+                                <select name="year" class="form-select" id="yearSelect" {% if student and student.is_passed_out %}disabled{% endif %} {% if not student or not student.is_passed_out %}required{% endif %}>
+                                    <option value="">Select Year</option>
+                                    {% for y in years %}
+                                    <option value="{{ y }}" {% if student.year|stringformat:"s" == y %}selected{% endif%}>{{ y }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select your year.
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3" id="semesterField">
+                                <label class="form-label">Semester *</label>
+                                <select name="sem" class="form-select" id="semesterSelect" {% if student and student.is_passed_out %}disabled{% endif %} {% if not student or not student.is_passed_out %}required{% endif %}>
+                                    <option value="">Select Semester</option>
+                                    {% for s in semesters %}
+                                    <option value="{{ s }}" {% if student.sem|stringformat:"s" == s %}selected{% endif %}>
+                                        {{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Please select your semester.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Identification Numbers -->
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Roll No *</label>
+                            <input type="text" name="roll_no" value="{{ student.roll_no|default:'' }}"
+                                class="form-control" required {% if student and student.is_passed_out %}disabled{% endif %}>
+                            <div class="invalid-feedback">
+                                Please enter your roll number.
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Register No *</label>
+                            <input type="text" name="reg_no" value="{{ student.reg_no|default:'' }}"
+                                class="form-control" required {% if student and student.is_passed_out %}disabled{% endif %}>
+                            <div class="invalid-feedback">
+                                Please enter your register number.
+                            </div>
+                        </div>
+
+                        <!-- CGPA and Marksheet Upload -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">CGPA (Optional)</label>
+                            <input type="number" step="0.01" min="0" max="10" name="cgpa" default="0"
+                                value="{{ student.cgpa|default:'' }}" class="form-control" placeholder="Enter CGPA">
+                            <small class="text-muted">Enter your CGPA (0-10 scale)</small>
+
+                            <!-- Marksheet Upload Section -->
+                            <div class="marksheet-upload-container">
+                                <label class="form-label">Upload Marksheet Image (Optional)</label>
+                                <div class="upload-area" id="marksheetUploadArea">
+                                    <div class="upload-icon">
+                                        <i class="bi bi-cloud-upload"></i>
+                                    </div>
+                                    <p class="mb-1">Drag & drop or click to upload</p>
+                                    <p class="small text-muted mb-0">JPG, PNG, PDF (Max 5MB)</p>
+                                    <input type="file" name="marksheet" id="marksheetInput" class="d-none"
+                                        accept=".jpg,.jpeg,.png,.pdf">
+                                </div>
+                                <img id="marksheetPreview" class="marksheet-preview d-none" alt="Marksheet Preview">
+                                <div id="marksheetFileName" class="mt-2 small text-muted"></div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Resume (Optional)</label>
+                            {% if student and student.resume %}
+                            <div class="mb-2">
+                                <a href="{{ student.resume.url }}" target="_blank" class="text-decoration-none me-3">
+                                    <i class="bi bi-eye-fill me-1"></i>View Current Resume
+                                </a>
+                            </div>
+                            {% endif %}
+                            <input type="file" name="resume" class="form-control" accept=".pdf,.doc,.docx">
+                            <small class="text-muted">PDF, DOC, DOCX files only (max 5MB)</small>
+                        </div>
+
+                        <!-- Employment Details -->
+                        <div class="col-12 mt-2">
+                            <h6 class="section-title">Employment Details (Optional)</h6>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" name="job_title" value="{{ student.job_info.all.0.job_title }}"
+                                class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" name="company_name" value="{{ student.job_info.all.0.company_name }}"
+                                class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company Location</label>
+                            <input type="text" name="company_location" value="{{ student.job_info.all.0.company_location }}"
+                                class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Salary</label>
+                            <input type="text" name="salary" value="{{ student.job_info.all.0.salary }}"
+                                class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Store the original image source
+        let originalImageSrc = document.getElementById('profilePreview').src;
+        let fileInput = document.getElementById('id_profile_picture');
+        let profilePreview = document.getElementById('profilePreview');
+        let editButton = document.querySelector('.avatar-upload .edit');
+
+        // Handle edit button click
+        if (editButton && fileInput) {
+            editButton.addEventListener('click', function () {
+                fileInput.click();
+            });
+        }
+
+        // Handle file selection
+        if (fileInput && profilePreview) {
+            fileInput.addEventListener('change', function (event) {
+                const file = event.target.files[0];
+                if (file && file.type.match('image.*')) {
+                    // Validate file size (2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('Profile picture size must be less than 2MB.');
+                        fileInput.value = '';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        profilePreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Reset to original image when modal is closed without saving
+        const editModal = document.getElementById('editProfileModal');
+        if (editModal) {
+            editModal.addEventListener('hidden.bs.modal', function () {
+                // Reset the preview to original image
+                profilePreview.src = originalImageSrc;
+                // Clear the file input
+                fileInput.value = '';
+
+                // Also reset form validation
+                const form = this.querySelector('form');
+                if (form) {
+                    form.classList.remove('was-validated');
+                }
+                
+                // Reset marksheet preview
+                const marksheetPreview = document.getElementById('marksheetPreview');
+                const marksheetFileName = document.getElementById('marksheetFileName');
+                if (marksheetPreview) {
+                    marksheetPreview.classList.add('d-none');
+                    marksheetPreview.src = '';
+                }
+                if (marksheetFileName) {
+                    marksheetFileName.textContent = '';
+                }
+                
+                // Clear marksheet file input
+                const marksheetInput = document.getElementById('marksheetInput');
+                if (marksheetInput) {
+                    marksheetInput.value = '';
+                }
+            });
+        }
+
+        // Degree programs data structure
+        const degreePrograms = JSON.parse('{{ degrees|escapejs }}');
+        console.log("Degree programs data:", degreePrograms);
+
+        // Degree program selection handler
+        const degreeProgramSelect = document.getElementById('degree_program');
+        const branchSelect = document.getElementById('branch');
+
+        if (degreeProgramSelect && branchSelect) {
+            degreeProgramSelect.addEventListener('change', function () {
+                const selectedProgram = this.value;
+                branchSelect.innerHTML = '<option value="">Select branch</option>';
+
+                if (selectedProgram && degreePrograms[selectedProgram]) {
+                    branchSelect.disabled = false;
+                    degreePrograms[selectedProgram].forEach(branch => {
+                        const option = document.createElement('option');
+                        option.value = branch;
+                        option.textContent = branch;
+                        branchSelect.appendChild(option);
+                    });
+
+                    // If editing existing student, try to select their current branch
+                    {% if student %}
+                    const currentBranch = "{{ student.branch }}";
+                    if (currentBranch) {
+                        branchSelect.value = currentBranch;
+                    }
+                    {% endif %}
+                } else {
+                    branchSelect.disabled = true;
+                }
+            });
+
+            // Trigger change event if degree is already selected (edit mode)
+            {% if student %}
+            if (degreeProgramSelect.value) {
+                degreeProgramSelect.dispatchEvent(new Event('change'));
+            }
+            {% endif %}
+        }
+
+        // Passed Out Checkbox Functionality
+        const passedOutCheckbox = document.getElementById('is_passed_out');
+        const yearSelect = document.getElementById('yearSelect');
+        const semesterSelect = document.getElementById('semesterSelect');
+        const academicRow = document.getElementById('academicRow');
+        const courseSelect = document.getElementById('degree_program');
+        const branchSelectField = document.getElementById('branch');
+        const rollNoInput = document.querySelector('input[name="roll_no"]');
+        const regNoInput = document.querySelector('input[name="reg_no"]');
+
+        function toggleAcademicFields() {
+            if (passedOutCheckbox.checked) {
+                // If passed out is checked
+                academicRow.classList.add('disabled');
+                yearSelect.disabled = true;
+                semesterSelect.disabled = true;
+                courseSelect.disabled = true;
+                branchSelectField.disabled = true;
+                rollNoInput.disabled = true;
+                regNoInput.disabled = true;
+
+                // Remove required attribute from year and semester
+                yearSelect.removeAttribute('required');
+                semesterSelect.removeAttribute('required');
+                
+                // Remove invalid state if present
+                yearSelect.classList.remove('is-invalid');
+                semesterSelect.classList.remove('is-invalid');
+            } else {
+                // If passed out is not checked
+                academicRow.classList.remove('disabled');
+                yearSelect.disabled = false;
+                semesterSelect.disabled = false;
+                courseSelect.disabled = false;
+                branchSelectField.disabled = false;
+                rollNoInput.disabled = false;
+                regNoInput.disabled = false;
+
+                // Set required attribute for year and semester
+                yearSelect.setAttribute('required', 'required');
+                semesterSelect.setAttribute('required', 'required');
+            }
+        }
+
+        // Initialize the fields based on current state
+        if (passedOutCheckbox) {
+            toggleAcademicFields();
+
+            // Add event listener for checkbox change
+            passedOutCheckbox.addEventListener('change', toggleAcademicFields);
+        }
+
+        // Marksheet Upload Functionality
+        const marksheetUploadArea = document.getElementById('marksheetUploadArea');
+        const marksheetInput = document.getElementById('marksheetInput');
+        const marksheetPreview = document.getElementById('marksheetPreview');
+        const marksheetFileName = document.getElementById('marksheetFileName');
+
+        // Create container for marksheet preview if it doesn't exist
+        let marksheetPreviewContainer = document.querySelector('.marksheet-preview-container');
+        if (!marksheetPreviewContainer && marksheetPreview) {
+            marksheetPreviewContainer = document.createElement('div');
+            marksheetPreviewContainer.className = 'marksheet-preview-container d-none';
+            marksheetPreview.parentNode.insertBefore(marksheetPreviewContainer, marksheetPreview.nextSibling);
+            marksheetPreviewContainer.appendChild(marksheetPreview);
+        }
+
+        if (marksheetUploadArea && marksheetInput) {
+            // Click to upload
+            marksheetUploadArea.addEventListener('click', function () {
+                marksheetInput.click();
+            });
+
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                marksheetUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                marksheetUploadArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                marksheetUploadArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                marksheetUploadArea.classList.add('drag-over');
+            }
+
+            function unhighlight() {
+                marksheetUploadArea.classList.remove('drag-over');
+            }
+
+            // Handle drop
+            marksheetUploadArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            // Handle file input change
+            marksheetInput.addEventListener('change', function (e) {
+                handleFiles(this.files);
+            });
+
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Please upload JPG, PNG, or PDF files only.');
+                        return;
+                    }
+
+                    // Validate file size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File size must be less than 5MB.');
+                        return;
+                    }
+
+                    // Display file name
+                    marksheetFileName.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+
+                    // Display preview for images
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            marksheetPreview.src = e.target.result;
+                            marksheetPreview.classList.remove('d-none');
+                            
+                            // Show container
+                            if (marksheetPreviewContainer) {
+                                marksheetPreviewContainer.classList.remove('d-none');
+                            }
+                            
+                            // Add CSS for responsive image
+                            marksheetPreview.style.maxWidth = '100%';
+                            marksheetPreview.style.height = 'auto';
+                            marksheetPreview.style.maxHeight = '200px';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        // For PDF files, hide the preview
+                        marksheetPreview.classList.add('d-none');
+                        if (marksheetPreviewContainer) {
+                            marksheetPreviewContainer.classList.add('d-none');
+                        }
+                        marksheetFileName.innerHTML += ' <span class="text-info">(PDF file - preview not available)</span>';
+                    }
+                }
+            }
+        }
+
+        // Form validation for modal
+        const form = editModal ? editModal.querySelector('form.needs-validation') : null;
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                // Remove required attribute from year and semester if passed out is checked
+                if (passedOutCheckbox && passedOutCheckbox.checked) {
+                    yearSelect.removeAttribute('required');
+                    semesterSelect.removeAttribute('required');
+                }
+
+                // Validate CGPA range if value is provided
+                const cgpaInput = document.querySelector('input[name="cgpa"]');
+                if (cgpaInput && cgpaInput.value.trim() !== '') {
+                    const cgpa = parseFloat(cgpaInput.value);
+                    if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        cgpaInput.classList.add('is-invalid');
+                        cgpaInput.focus();
+                        return;
+                    } else {
+                        cgpaInput.classList.remove('is-invalid');
+                    }
+                }
+
+                // Check form validity
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        }
+    });
+</script>
+{% endblock %}

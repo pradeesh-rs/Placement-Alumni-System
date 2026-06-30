@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Principal Dashboard{% endblock %}
+{% block page %}Principal Dashboard{% endblock %}
+{% block Main_title %}Principal Dashboard{% endblock %}
+
+{% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Quick Stats -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Teachers</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ teacher_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Students</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ student_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Degree Programs</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ degree_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Specializations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ specialization_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-atom fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Degree Specialization Management -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Manage Degree Programs</h6>
+                    <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#addDegreeModal">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="degreeTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Degree</th>
+                                    <th>Specializations</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for degree in degree_specializations %}
+                                <tr>
+                                    <td>{{ degree.degree }}</td>
+                                    <td>{{ degree.specialization }}</td>
+                                    <td>
+                                      <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#editDegreeModal{{ degree.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+
+                                        <!-- Delete Button with proper URL and confirmation -->
+                                        <a href="{% url 'app:delete_degree_specialization' degree.id %}" 
+                                        class="btn btn-sm btn-danger" 
+                                        onclick="return confirmDelete()">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No degree specializations found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for activity in recent_activities %}
+                        <div class="list-group-item list-group-item-action flex-column align-items-start">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ activity.title }}</h6>
+                                <small>{{ activity.timestamp|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1">{{ activity.description }}</p>
+                            <small>By {{ activity.user.get_full_name|default:activity.user.username }}</small>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <p class="mb-1">No recent activities</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Degree Specialization Modal -->
+<div class="modal fade" id="addDegreeModal" tabindex="-1" role="dialog" aria-labelledby="addDegreeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDegreeModalLabel">Add New Degree Specialization</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'app:add_degree_specialization' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="degree_name">Degree Program</label>
+                        <input type="text" class="form-control" id="degree_name" name="degree_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="specialization_name">Specialization</label>
+                        <input type="text" class="form-control" id="specialization_name" name="specialization_name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Degree Specialization Modals -->
+{% for degree in degree_specializations %}
+<div class="modal fade" id="editDegreeModal{{ degree.id }}" tabindex="-1" role="dialog" aria-labelledby="editDegreeModalLabel{{ degree.id }}" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editDegreeModalLabel{{ degree.id }}">Edit Degree Specialization</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post" action="{% url 'app:add_degree_specialization'  %}">
+                {% csrf_token %}
+                <input type="hidden" name="id" value="{{ degree.id }}">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="degree_name{{ degree.id }}">Degree Program</label>
+                        <input type="text" class="form-control" id="degree_name{{ degree.id }}" name="degree_name" value="{{ degree.degree }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="specialization_name{{ degree.id }}">Specialization</label>
+                        <input type="text" class="form-control" id="specialization_name{{ degree.id }}" name="specialization_name" value="{{ degree.specialization }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    .card {
+        border-radius: 0.35rem;
+    }
+    .card-header {
+        border-radius: 0.35rem 0.35rem 0 0 !important;
+    }
+    .table th {
+        border-top: none;
+    }
+    .alert-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        width: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Auto-close alerts after 5 seconds
+    setTimeout(function() {
+        $('.alert').alert('close');
+    }, 5000);
+
+    // Initialize any other required scripts here
+});
+</script>
+{% endblock %}

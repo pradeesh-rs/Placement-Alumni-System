@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Principal Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    #profilePreview {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+    }
+    .profile-picture-container {
+        position: relative;
+        display: inline-block;
+    }
+    .camera-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    /* Center content when no principal */
+    .no-principal-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+    }
+    .detail-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .detail-icon {
+        color: #6c757d;
+        font-size: 1.25rem;
+        margin-right: 1rem;
+    }
+    .section-divider {
+        border-top: 1px solid #dee2e6;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block page %}Profile{% endblock %}
+{% block Main_title %}Principal Profile{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="row">
+        <div class="col-12 col-lg-8 mx-auto">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-column flex-md-row align-items-center {% if not principal %}no-principal-content{% endif %}">
+                        <!-- Profile Picture Column -->
+                        <div class="text-center mb-4 mb-md-0 {% if not principal %}me-md-0{% else %}me-md-4{% endif %}">
+                            {% if principal and principal.profile_picture %}
+                                <img src="{{ principal.profile_picture.url }}" 
+                                     alt="Profile Picture" 
+                                     class="rounded-circle shadow-sm"
+                                     width="150"
+                                     height="150">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={% if principal %}{{ principal.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=0D8ABC&color=fff&rounded=true&size=150"
+                                     alt="Avatar" 
+                                     class="rounded-circle shadow-sm"
+                                     width="150"
+                                     height="150">
+                            {% endif %}
+                            
+                            <button class="btn btn-outline-primary mt-3 w-100" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editProfileModal">
+                                <i class="bi {% if principal %}bi-pencil-fill{% else %}bi-plus-circle-fill{% endif %} me-2"></i>
+                                {% if principal %}Edit{% else %}Add{% endif %} Profile
+                            </button>
+                        </div>
+                        
+                        {% if principal %}
+                        <!-- Profile Details Column -->
+                        <div class="flex-grow-1">
+                            <h2 class="mb-3">{{ principal.name }}</h2>
+                            
+                            <div class="detail-item">
+                                <i class="bi bi-envelope-fill detail-icon"></i>
+                                <div>
+                                    <div class="text-muted small">Email</div>
+                                    <div>{{ principal.email }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <i class="bi bi-telephone-fill detail-icon"></i>
+                                <div>
+                                    <div class="text-muted small">Phone</div>
+                                    <div>{{ principal.phone }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <i class="bi bi-geo-alt-fill detail-icon"></i>
+                                <div>
+                                    <div class="text-muted small">Address</div>
+                                    <div>{{ principal.address }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-divider">
+                                <h5 class="mb-3">Account Information</h5>
+                                
+                                <div class="detail-item">
+                                    <i class="bi bi-calendar-check-fill detail-icon"></i>
+                                    <div>
+                                        <div class="text-muted small">Last Login</div>
+                                        <div>{{ user.last_login|date:"F j, Y g:i A" }}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="detail-item">
+                                    <i class="bi bi-person-plus-fill detail-icon"></i>
+                                    <div>
+                                        <div class="text-muted small">Date Joined</div>
+                                        <div>{{ user.date_joined|date:"F j, Y" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="editProfileModalLabel">
+                        {% if principal %}Edit{% else %}Add{% endif %} Principal Profile
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4 mb-md-0">
+                            <div class="profile-picture-container">
+                                <img id="profilePreview" 
+                                     src="{% if principal and principal.profile_picture %}{{ principal.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={% if principal %}{{ principal.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=0D8ABC&color=fff&rounded=true&size=150{% endif %}" 
+                                     class="rounded-circle shadow-sm"
+                                     width="150"
+                                     height="150">
+                                <label for="id_profile_picture" class="camera-btn">
+                                    <i class="bi bi-camera-fill"></i>
+                                </label>
+                                <input type="file" 
+                                       name="profile_picture" 
+                                       id="id_profile_picture" 
+                                       class="d-none" 
+                                       accept="image/*">
+                            </div>
+                            <div class="mt-2 small text-muted">JPG, PNG max 2MB</div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            {% if principal %}
+                            <input type="hidden" name="hide" value="edit">
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <label for="id_name" class="form-label">Full Name</label>
+                                <input type="text" 
+                                       name="name" 
+                                       id="id_name" 
+                                       value="{{ principal.name|default:'' }}" 
+                                       class="form-control" 
+                                       required>
+                                <div class="invalid-feedback">Please enter principal name</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label">Email</label>
+                                <input type="email" 
+                                       name="email" 
+                                       id="id_email" 
+                                       value="{{ principal.email|default:'' }}" 
+                                       class="form-control" 
+                                       required>
+                                <div class="invalid-feedback">Please enter a valid email</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_phone" class="form-label">Phone</label>
+                                    <input type="tel" 
+                                           name="phone" 
+                                           id="id_phone" 
+                                           value="{{ principal.phone|default:'' }}" 
+                                           class="form-control" 
+                                           required>
+                                    <div class="invalid-feedback">Please enter phone number</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_address" class="form-label">Address</label>
+                                    <textarea class="form-control" name="address" id="id_address" required>{{ principal.address|default:'' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Elements
+    const profilePictureInput = document.getElementById('id_profile_picture');
+    const profilePreview = document.getElementById('profilePreview');
+    const editModal = document.getElementById('editProfileModal');
+    
+    // Default image URL
+    const defaultImageUrl = "{% if principal and principal.profile_picture %}{{ principal.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={% if principal %}{{ principal.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=0D8ABC&color=fff&rounded=true&size=150{% endif %}";
+
+    // Image preview handler
+    if (profilePictureInput && profilePreview) {
+        profilePictureInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (file && file.type.match('image.*')) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    profilePreview.src = e.target.result;
+                };
+                
+                reader.onerror = function() {
+                    profilePreview.src = defaultImageUrl;
+                };
+                
+                reader.readAsDataURL(file);
+            } else {
+                profilePreview.src = defaultImageUrl;
+            }
+        });
+    }
+    
+    // Modal close handler
+    if (editModal) {
+        editModal.addEventListener('hidden.bs.modal', function() {
+            if (profilePreview) {
+                profilePreview.src = defaultImageUrl;
+            }
+            
+            const form = this.querySelector('form');
+            if (form) {
+                form.classList.remove('was-validated');
+            }
+        });
+    }
+    
+    // Form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+});
+</script>
+{% endblock %}

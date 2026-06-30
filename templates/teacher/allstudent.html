@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Students{% endblock %}
+
+{% block extra_css %}
+<style>
+    .student-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+    .student-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .profile-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .detail-item {
+        margin-bottom: 8px;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #555;
+    }
+
+    .no-image {
+        background: #f5f5f5;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #777;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .clear-search {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #999;
+    }
+
+    .toast {
+        z-index: 1100;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .details-modal-img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin: 0 auto 20px;
+        display: block;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+
+    .top-action-buttons {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+</style>
+{% endblock %}
+
+{% block page %}All Students{% endblock %}
+{% block Main_title %}All Students{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="form-control"
+                    placeholder="Search by name, roll no, branch..." oninput="debounceFilter()">
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="filter-row row">
+                <div class="col-md-3">
+                    <select id="yearSelect" class="form-select" onchange="debounceFilter()">
+                        <option value="">All Years</option>
+                        <option value="1">Year 1</option>
+                        <option value="2">Year 2</option>
+                        <option value="3">Year 3</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        Clear All Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Notification Button -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-primary">Total Students: {{ students|length }}</span>
+                </div>
+                <button id="groupNotificationBtn" class="btn btn-primary" data-bs-toggle="modal"
+                    data-bs-target="#groupNotificationModal">
+                    <i class="fas fa-bell me-2"></i>Notify Filtered Students
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students List -->
+    <div class="row" id="studentContainer">
+        <div class="col-12 no-results" id="noResults" style="display:none;">
+            <div class="alert alert-info text-center">
+                No students found matching your filters.
+            </div>
+        </div>
+
+        {% for student in students %}
+        <div class="col-md-4 mb-4 student-card-container">
+            <div class="student-card card h-100" data-degree="{{ student.course|default_if_none:'' }}"
+                data-year="{{ student.year|default_if_none:'' }}"
+                data-search="{{ student.name|lower }} {{ student.roll_no|lower }} {{ student.reg_no|lower }} {{ student.course|lower|default_if_none:'' }} {{ student.branch|lower|default_if_none:'' }} {{ student.email|lower|default_if_none:'' }}">
+                {% if student.profile_picture %}
+                <img src="{{ student.profile_picture.url }}" alt="{{ student.name }}" class="profile-img">
+                {% else %}
+                <div class="no-image"><span>No Image Available</span></div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center w-100 mb-2">
+                        <!-- Student Name -->
+                        <h4 class="card-title mb-0">{{ student.name }}</h4>
+
+                        <!-- Action Buttons -->
+                        <div class="top-action-buttons">
+                            <!-- Notify Button -->
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#notificationModal" data-student-id="{{ student.id }}"
+                                data-student-name="{{ student.name }}">
+                                <i class="bi bi-bell"></i>
+                            </button>
+
+                            <!-- Delete Button -->
+                            <form method="POST" action="{% url 'teacher:student_delete' student.id %}" class="m-0 p-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Delete {{ student.name }}?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+
+                        </div>
+                    </div>
+
+                    <p class="text-muted">{{ student.course }} - {{ student.branch }}</p>
+                    <div class="student-details">
+                        <div class="detail-item"><span class="detail-label">Email:</span> {{ student.email }}</div>
+                        <div class="detail-item"><span class="detail-label">Roll No:</span> {{ student.roll_no }}</div>
+                        <div class="detail-item"><span class="detail-label">Year/Sem:</span> Year {{ student.year }} -
+                            Sem {{ student.sem }}</div>
+                        <div class="detail-item"><span class="detail-label">CGPA:</span> {% if student.cgpa %}{{student.cgpa }}{% else %}Not available{% endif %}</div>
+                        <div class="action-buttons">
+                            {% if student.job_info.all.0.job_title %}
+                            <span class="badge bg-success">Placed</span>
+                            {% else %}
+                            <span class="badge bg-info">Not Placed</span>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
+                                data-bs-target="#editPlacementModal{{ student.id }}" title="Edit Placement Details">
+                                <i class="bi bi-briefcase"></i>
+                            </button>
+                            <button class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal"
+                                data-bs-target="#detailsModal{{ student.id }}">
+                                View Full Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Individual Student Details Modal -->
+        <div class="modal fade" id="detailsModal{{ student.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Student Details - {{ student.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                {% if student.profile_picture %}
+                                <img src="{{ student.profile_picture.url }}" alt="{{ student.name }}"
+                                    class="details-modal-img img-fluid">
+                                {% else %}
+                                <div class="no-image mb-3" style="height: 150px; width: 150px; margin: 0 auto;">
+                                    <span>No Image</span>
+                                </div>
+                                {% endif %}
+                                <h4 class="mt-3">{{ student.name }}</h4>
+                                <p class="text-muted">{{ student.course }} {% if student.branch %}- {{ student.branch}}{% endif %}</p>
+                                {% if student.job_info.all.0.job_title %}
+                                <span class="badge bg-success mb-2">Placed</span>
+                                {% else %}
+                                <span class="badge bg-info mb-2">Not Placed</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <div class="details-grid">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Email:</span>
+                                        <div>{{ student.email|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Phone:</span>
+                                        <div>{{ student.phone|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Address:</span>
+                                        <div>{{ student.address|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Date of Birth:</span>
+                                        <div>{% if student.date_of_birth %}{{ student.date_of_birth|date:"F d, Y" }}{%
+                                            else %}Not provided{% endif %}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Gender:</span>
+                                        <div>{{ student.gender|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Blood Group:</span>
+                                        <div>{{ student.blood_group|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Roll No:</span>
+                                        <div>{{ student.roll_no|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Reg No:</span>
+                                        <div>{{ student.reg_no|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Year:</span>
+                                        <div>{{ student.year|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Semester:</span>
+                                        <div>{{ student.sem|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">CGPA:</span>
+                                        <div>{% if student.cgpa %}{{ student.cgpa }}{% else %}Not available{% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Resume:</span>
+                                        <div>
+                                            {% if student.resume %}
+                                            <a href="{{ student.resume.url }}" target="_blank"
+                                                class="btn btn-sm btn-outline-primary">View Resume</a>
+                                            {% if student.is_resume_approved %}
+                                            <span class="badge bg-success ms-2">Approved</span>
+                                            {% else %}
+                                            <span class="badge bg-warning ms-2">Pending</span>
+                                            {% endif %}
+                                            {% else %}
+                                            No resume uploaded
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Placement Details Section -->
+                                <hr class="my-3">
+                                <h5 class="mb-3">Placement Details</h5>
+                                <div class="details-grid">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Job Title:</span>
+                                        <div>{% if student.job_info.all.0.job_title %}{{student.job_info.all.0.job_title }}{% else %}Not placed{% endif %}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Company:</span>
+                                        <div>{% if student.job_info.all.0.company_name %}{{student.job_info.all.0.company_name }}{% else %}N/A{% endif %}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Location:</span>
+                                        <div>{% if student.job_info.all.0.company_location %}{{student.job_info.all.0.company_location }}{% else %}N/A{% endif %}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Salary:</span>
+                                        <div>{% if student.job_info.all.0.salary %}₹{{student.job_info.all.0.salary }}{% else %}N/A{% endif %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#editPlacementModal{{ student.id }}" data-bs-dismiss="modal">
+                            <i class="bi bi-pencil me-1"></i>Edit Placement Details
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Placement Details Modal -->
+        <div class="modal fade" id="editPlacementModal{{ student.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST" action="{% url 'teacher:update_placement_details' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="student_id" value="{{ student.id }}">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Placement Details - {{ student.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Job Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="job_title"
+                                    value="{% if student.job_info.all.0.job_title %}{{ student.job_info.all.0.job_title }}{% endif %}"
+                                    placeholder="e.g., Software Engineer" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="company_name"
+                                    value="{% if student.job_info.all.0.company_name %}{{ student.job_info.all.0.company_name }}{% endif %}"
+                                    placeholder="e.g., Google" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Company Location <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="company_location"
+                                    value="{% if student.job_info.all.0.company_location %}{{ student.job_info.all.0.company_location }}{% endif %}"
+                                    placeholder="e.g., Bangalore, India" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Salary (Annual in ₹) <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" name="salary"
+                                    value="{% if student.job_info.all.0.salary %}{{ student.job_info.all.0.salary }}{% endif %}"
+                                    placeholder="e.g., 500000" step="0.01" required>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                The student will be notified about this update.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i>Save Placement Details
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Individual Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="individualNotificationForm" method="post" action="{% url 'teacher:allstudent' %}">
+                {% csrf_token %}
+                <input type="hidden" name="student_id" id="notificationStudentId">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Notification to <span id="notificationStudentName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Notification Message</label>
+                        <textarea class="form-control" name="message" rows="5" required
+                            placeholder="Enter your notification message here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Notification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Group Notification Modal -->
+<div class="modal fade" id="groupNotificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="groupNotificationForm" method="post" action="{% url 'teacher:group_notification' %}">
+                {% csrf_token %}
+                <input type="hidden" name="filter_params" id="filterParams">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Group Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        This will be sent to all students matching your current filters.
+                        <div id="filteredCount" class="mt-2 fw-bold"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notification Message</label>
+                        <textarea class="form-control" name="message" rows="5" required
+                            placeholder="Enter your notification message here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send to Filtered Students</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize notification modal
+    document.addEventListener('DOMContentLoaded', function () {
+        const notificationModal = document.getElementById('notificationModal');
+        if (notificationModal) {
+            notificationModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const studentId = button.getAttribute('data-student-id');
+                const studentName = button.getAttribute('data-student-name');
+
+                document.getElementById('notificationStudentId').value = studentId;
+                document.getElementById('notificationStudentName').textContent = studentName;
+            });
+        }
+
+        // Initialize group notification modal
+        const groupNotificationModal = document.getElementById('groupNotificationModal');
+        if (groupNotificationModal) {
+            groupNotificationModal.addEventListener('show.bs.modal', function () {
+                // Capture current filter parameters
+                const searchQuery = document.getElementById('searchInput').value;
+                const year = document.getElementById('yearSelect').value;
+
+                // Count visible students
+                const visibleCount = document.querySelectorAll('.student-card-container[style*="display: block"]').length;
+                document.getElementById('filteredCount').textContent = `Will be sent to ${visibleCount} student(s)`;
+
+                document.getElementById('filterParams').value = JSON.stringify({
+                    search: searchQuery,
+                    year: year
+                });
+            });
+        }
+
+
+    });
+
+    // Filter functions
+    function filterStudents() {
+        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+        const year = document.getElementById('yearSelect').value;
+
+        const studentCards = document.querySelectorAll('.student-card-container');
+        let hasVisibleStudents = false;
+        let visibleCount = 0;
+
+        studentCards.forEach(card => {
+            const studentCard = card.querySelector('.student-card');
+            const studentName = studentCard.querySelector('.card-title').textContent.toLowerCase();
+            const yearData = studentCard.dataset.year || '';
+
+            const matchesSearch = !searchQuery || studentName.includes(searchQuery);
+            const matchesYear = !year || yearData === year;
+
+            const shouldShow = matchesSearch && matchesYear;
+
+            card.style.display = shouldShow ? 'block' : 'none';
+            if (shouldShow) {
+                hasVisibleStudents = true;
+                visibleCount++;
+            }
+        });
+
+        document.getElementById('noResults').style.display = hasVisibleStudents ? 'none' : 'block';
+
+        // Show/hide group notification button
+        const groupBtn = document.getElementById('groupNotificationBtn');
+        if (visibleCount > 0) {
+            groupBtn.style.display = 'block';
+        } else {
+            groupBtn.style.display = 'none';
+        }
+    }
+
+    // Debounce function to improve performance
+    let filterTimeout;
+    function debounceFilter() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(filterStudents, 300);
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('yearSelect').selectedIndex = 0;
+        filterStudents();
+    }
+
+    // Initialize event listeners
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('searchInput').addEventListener('input', debounceFilter);
+        document.getElementById('yearSelect').addEventListener('change', debounceFilter);
+
+        // Set initial state
+        filterStudents();
+
+        // Set group button initial state
+        const groupBtn = document.getElementById('groupNotificationBtn');
+        const visibleCount = document.querySelectorAll('.student-card-container[style*="display: block"], .student-card-container:not([style*="display: none"])').length;
+        groupBtn.style.display = visibleCount > 0 ? 'block' : 'none';
+    });
+
+    // Handle form submissions
+    document.addEventListener('DOMContentLoaded', function () {
+        const individualForm = document.getElementById('individualNotificationForm');
+        if (individualForm) {
+            individualForm.addEventListener('submit', function (e) {
+                const message = this.querySelector('textarea[name="message"]').value.trim();
+                if (!message) {
+                    e.preventDefault();
+                    alert('Please enter a notification message');
+                }
+            });
+        }
+
+        const groupForm = document.getElementById('groupNotificationForm');
+        if (groupForm) {
+            groupForm.addEventListener('submit', function (e) {
+                const message = this.querySelector('textarea[name="message"]').value.trim();
+                if (!message) {
+                    e.preventDefault();
+                    alert('Please enter a notification message');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

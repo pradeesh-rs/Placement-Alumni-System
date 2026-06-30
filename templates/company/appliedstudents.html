@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Applied Students{% endblock %}
+
+{% block extra_css %}
+<style>
+    .student-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .student-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .profile-img {
+        width: 100%;
+        height: 200px;
+        object-fit: contain;
+        border-radius: 10px 10px 0 0;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .detail-item {
+        margin-bottom: 8px;
+    }
+    .detail-label {
+        font-weight: 600;
+        color: #555;
+    }
+    .no-image {
+        background: #f5f5f5;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #777;
+        border-radius: 10px 10px 0 0;
+    }
+    .search-box {
+        position: relative;
+    }
+    .clear-search {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #999;
+    }
+</style>
+{% endblock %}
+{% block page %} Applied Students {% endblock %}
+{% block Main_title %} Applied Students {% endblock %}
+    
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="form-control"
+                       placeholder="Search by name, roll no, branch..."
+                       oninput="debounceFilter()">
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="filter-row row">
+                <div class="col-md-3">
+                    <select id="degreeSelect" class="form-select" onchange="updateBranches(); debounceFilter()">
+                        <option value="">All Degrees</option>
+                        {% for degree in degrees %}
+                            <option value="{{ degree }}">{{ degree }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="branchSelect" class="form-select" onchange="debounceFilter()">
+                        <option value="">All Branches</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="yearSelect" class="form-select" onchange="debounceFilter()">
+                        <option value="">All Years</option>
+                        <option value="1">Year 1</option>
+                        <option value="2">Year 2</option>
+                        <option value="3">Year 3</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                        Clear All Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="studentContainer">
+        <div class="col-12 no-results" id="noResults" style="display:none;">
+            <div class="alert alert-info text-center">
+                No students found matching your filters.
+            </div>
+        </div>
+
+        {% for student in students %}
+        <div class="col-md-4 mb-4 student-card-container">
+            <div class="student-card card h-100"
+                 data-degree="{{ student.course|default_if_none:'' }}"
+                 data-branch="{{ student.branch|default_if_none:'' }}"
+                 data-year="{{ student.year|default_if_none:'' }}"
+                 data-search="{{ student.name|lower }} {{ student.roll_no|lower }} {{ student.reg_no|lower }} {{ student.course|lower|default_if_none:'' }} {{ student.branch|lower|default_if_none:'' }} {{ student.email|lower|default_if_none:'' }}">
+                {% if student.profile_picture %}
+                    <img src="{{ student.profile_picture.url }}" alt="{{ student.name }}" class="profile-img" loading="lazy" >
+                {% else %}
+                    <div class="no-image"><span>No Image Available</span></div>
+                {% endif %}
+                <div class="card-body">
+                    <h4 class="card-title">{{ student.name }}</h4>
+                    <p class="text-muted">{{ student.course }} - {{ student.branch }}</p>
+                    <div class="student-details">
+                        <div class="detail-item"><span class="detail-label">Roll No:</span> {{ student.roll_no }}</div>
+                        <div class="detail-item"><span class="detail-label">Year/Sem:</span> Year {{ student.year }} - Sem {{ student.sem }}</div>
+                        <div class="detail-item"><span class="detail-label">CGPA:</span> {% if student.cgpa %}{{ student.cgpa }}{% else %}Not available{% endif %}</div>
+                        <div class="detail-item">
+                            <span class="detail-label">Resume:</span>
+                            {% if student.resume %}
+                                <a href="{{ student.resume.url }}" target="_blank" class="text-decoration-none">View Resume</a>
+                            {% else %}
+                                Not uploaded
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // PROPERLY INITIALIZE DEGREE DATA
+    const degreePrograms = JSON.parse('{{ degrees|escapejs }}');
+    console.log("Properly parsed degree programs:", degreePrograms);
+
+    // POPULATE DEGREE SELECT PROPERLY
+    document.addEventListener('DOMContentLoaded', function() {
+        const degreeSelect = document.getElementById('degreeSelect');
+        
+        // Clear existing options except first
+        while (degreeSelect.options.length > 1) {
+            degreeSelect.remove(1);
+        }
+
+        // Add degree options from the properly parsed data
+        Object.keys(degreePrograms).forEach(degree => {
+            const option = document.createElement('option');
+            option.value = degree;
+            option.textContent = degree;
+            degreeSelect.appendChild(option);
+        });
+
+        console.log("Correct degree options:", 
+            Array.from(degreeSelect.options).map(opt => opt.value));
+    });
+
+    // REST OF YOUR FUNCTIONS (updateBranches, filterStudents, etc.)
+    function updateBranches() {
+        const selectedDegree = document.getElementById('degreeSelect').value;
+        const branchSelect = document.getElementById('branchSelect');
+        
+        branchSelect.innerHTML = '<option value="">All Branches</option>';
+        
+        if (selectedDegree && degreePrograms[selectedDegree]) {
+            degreePrograms[selectedDegree].forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch;
+                option.textContent = branch;
+                branchSelect.appendChild(option);
+            });
+        }
+    }
+
+    function filterStudents() {
+        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+        const degree = document.getElementById('degreeSelect').value;
+        const branch = document.getElementById('branchSelect').value;
+        const year = document.getElementById('yearSelect').value;
+
+        console.log("Filtering with:", {
+            degree: degree,
+            branch: branch,
+            year: year,
+            search: searchQuery
+        });
+
+        const studentCards = document.querySelectorAll('.student-card-container');
+        let hasVisibleStudents = false;
+
+        studentCards.forEach(card => {
+            const studentCard = card.querySelector('.student-card');
+            const searchData = studentCard.dataset.search || '';
+            const degreeData = studentCard.dataset.degree || '';
+            const branchData = studentCard.dataset.branch || '';
+            const yearData = studentCard.dataset.year || '';
+
+            const matchesSearch = !searchQuery || searchData.includes(searchQuery);
+            const matchesDegree = !degree || degreeData === degree;
+            const matchesBranch = !branch || branchData === branch;
+            const matchesYear = !year || yearData === year;
+
+            const shouldShow = matchesSearch && matchesDegree && matchesBranch && matchesYear;
+            
+            card.style.display = shouldShow ? 'block' : 'none';
+            if (shouldShow) hasVisibleStudents = true;
+        });
+
+        document.getElementById('noResults').style.display = hasVisibleStudents ? 'none' : 'block';
+    }
+
+    // Debounce function to improve performance
+    let filterTimeout;
+    function debounceFilter() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(filterStudents, 300);
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        filterStudents();
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('degreeSelect').selectedIndex = 0;
+        document.getElementById('branchSelect').innerHTML = '<option value="">All Branches</option>';
+        document.getElementById('yearSelect').selectedIndex = 0;
+        filterStudents();
+    }
+
+    // Initialize event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('searchInput').addEventListener('input', debounceFilter);
+        document.getElementById('degreeSelect').addEventListener('change', function() {
+            updateBranches();
+            debounceFilter();
+        });
+        document.getElementById('branchSelect').addEventListener('change', debounceFilter);
+        document.getElementById('yearSelect').addEventListener('change', debounceFilter);
+        
+        filterStudents();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% load static %}
+
+<!-- Chatbot UI -->
+<div id="chatbot-container" class="chatbot-container">
+    <!-- Chat Toggle Button -->
+    <button id="chatbot-toggle" class="chatbot-toggle btn btn-primary shadow-lg">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+
+    <!-- Chat Window -->
+    <div id="chatbot-window" class="chatbot-window shadow-lg d-none">
+        <div class="chatbot-header d-flex justify-content-between align-items-center bg-primary text-white p-3 rounded-top">
+            <h5 class="mb-0"><i class="bi bi-robot me-2"></i>Student Assistant</h5>
+            <button id="chatbot-close" class="btn-close btn-close-white" aria-label="Close"></button>
+        </div>
+        <div id="chatbot-messages" class="chatbot-messages p-3 overflow-auto">
+            <div class="message assistant-message mb-3">
+                <div class="message-content bg-light p-2 rounded shadow-sm">
+                    Hello! I'm here to help you navigate the placement portal. How can I assist you today?
+                </div>
+            </div>
+            {% if not student.phone or not student.address %}
+            <div class="message assistant-message mb-3">
+                <div class="message-content border-info border p-2 rounded shadow-sm bg-info bg-opacity-10">
+                    <i class="bi bi-exclamation-circle-fill text-info me-2"></i>
+                    It looks like your profile is incomplete. Please complete your <a href="{% url 'student:profile' %}" class="fw-bold">profile details</a> to unlock all features and apply for jobs!
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="chatbot-actions p-3 border-top">
+            <div class="d-grid gap-2">
+                <button class="btn btn-outline-primary btn-sm chat-ask" data-question="cgpa">How to add CGPA?</button>
+                <button class="btn btn-outline-primary btn-sm chat-ask" data-question="profile">How to edit/update profile?</button>
+                <button class="btn btn-outline-primary btn-sm chat-ask" data-question="apply">How to apply for jobs?</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chatbot-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 2000;
+    }
+
+    .chatbot-toggle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        transition: transform 0.3s ease;
+    }
+
+    .chatbot-toggle:hover {
+        transform: scale(1.1);
+    }
+
+    .chatbot-window {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 320px;
+        height: 450px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .chatbot-messages {
+        flex-grow: 1;
+        background-color: #f8f9fa;
+        font-size: 0.9rem;
+    }
+
+    .message-content {
+        max-width: 90%;
+        display: inline-block;
+        word-wrap: break-word;
+    }
+
+    .assistant-message .message-content {
+        border-bottom-left-radius: 0;
+    }
+
+    .user-message {
+        text-align: right;
+    }
+
+    .user-message .message-content {
+        background-color: #0d6efd;
+        color: white;
+        border-bottom-right-radius: 0;
+    }
+
+    .chatbot-actions .btn {
+        text-align: left;
+        white-space: normal;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    @media (max-width: 576px) {
+        .chatbot-window {
+            width: 280px;
+            right: -20px;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('chatbot-toggle');
+        const chatWindow = document.getElementById('chatbot-window');
+        const closeBtn = document.getElementById('chatbot-close');
+        const messagesContainer = document.getElementById('chatbot-messages');
+        const askButtons = document.querySelectorAll('.chat-ask');
+
+        const responses = {
+            'cgpa': `To add your CGPA:
+                <br>1. Go to the 'CGPA Calculator' page in the sidebar.
+                <br>2. Enter your SGPA and total credits for each semester.
+                <br>3. Click 'Calculate' to see your CGPA and save it to your profile.`,
+            'profile': `To edit, update, or manage your profile:
+                <br>1. Click on 'Profile' in the sidebar.
+                <br>2. Click 'Edit Profile' to update your details or upload your resume.
+                <br>3. Make sure to save your changes!`,
+            'apply': `To apply for a job:
+                <br>1. Go to your Dashboard.
+                <br>2. Filter jobs by your preferred location if needed.
+                <br>3. Click 'View Details' on any job card.
+                <br>4. If you meet the CGPA criteria and your resume is approved, you'll see an 'Apply Now' button.
+                <br>5. Fill out the application form and submit!`
+        };
+
+        toggleBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('d-none');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            chatWindow.classList.add('d-none');
+        });
+
+        askButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const question = this.textContent;
+                const type = this.getAttribute('data-question');
+                
+                // Add user message
+                addMessage(question, 'user');
+                
+                // Add assistant response
+                setTimeout(() => {
+                    addMessage(responses[type], 'assistant');
+                }, 500);
+            });
+        });
+
+        function addMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}-message mb-3`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = `message-content ${sender === 'user' ? 'bg-primary text-white' : 'bg-light'} p-2 rounded shadow-sm`;
+            contentDiv.innerHTML = text;
+            
+            msgDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(msgDiv);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    });
+</script>

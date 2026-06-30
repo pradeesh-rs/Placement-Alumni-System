@@ -1,0 +1,81 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+bin/
+include/
+lib/
+lib64/
+share/
+pyvenv.cfg
+pip-selfcheck.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Large Files & Archives
+*.zip
+*.tar.gz
+*.tar
+*.gz
+*.rar
+*.7z
+*.iso
+*.dmg
+
+# Data & Models (Common large files)
+*.csv
+*.json
+*.sql
+*.db
+*.pickle
+*.pkl
+*.h5
+*.pt
+*.weights
+*.onnx
+*.npy
+*.npz
+
+# Media
+*.mp4
+*.mov
+*.avi
+*.wmv
+*.flv
+*.mp3
+*.wav
+
+# Binaries & Executables
+*.exe
+*.bin
+*.o
+*.so
+*.dll
+*.dylib
+*.msi
+
+# Temporary & Logs
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# System Files
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Project Specific
+test/
+runs/

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page %}Company Details{% endblock %}
+{% block Main_title %}Company Details{% endblock %}
+{% block title %}Company Details{% endblock %}
+{% block extra_css %}
+]
+    /* Search box styling */
+#companySearch {
+    border-radius: 20px 0 0 20px;
+    padding-left: 20px;
+}
+
+#searchButton {
+    border-radius: 0 20px 20px 0;
+    border-left: none;
+}
+
+/* No results message */
+.alert-warning {
+    margin-top: 20px;
+}
+
+{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<div class="container py-5">
+    <h1 class="mb-4">Company Details</h1>
+    
+    <!-- Search Box -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <div class="input-group">
+                <input type="text" id="companySearch" class="form-control" placeholder="Search companies...">
+                <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row" id="companyContainer">
+        {% for company in companies %}
+        <div class="col-md-6 col-lg-4 mb-4 company-card">
+            <div class="card h-100" data-name="{{ company.name|lower }}" 
+                 data-industry="{{ company.industry_type|lower }}"
+                 data-location="{{ company.location|lower }}">
+                {% if company.profile_picture %}
+                <img src="{{ company.profile_picture.url }}" class="card-img-top" alt="{{ company.name }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <span class="text-muted">No Logo</span>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ company.name }}</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Industry:</strong> {{ company.industry_type }}</li>
+                        <li class="list-group-item"><strong>Location:</strong> {{ company.location }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ company.email }}</li>
+                        <li class="list-group-item"><strong>Phone:</strong> {{ company.phone }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">No companies found.</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('companySearch');
+    const searchButton = document.getElementById('searchButton');
+    const companyContainer = document.getElementById('companyContainer');
+    const companyCards = document.querySelectorAll('.company-card');
+    const noCompaniesMessage = document.querySelector('.alert-info'); // Original "no companies" message
+    
+    // Function to filter companies
+    function filterCompanies() {
+        const searchTerm = searchInput.value.toLowerCase();
+        let hasVisibleResults = false;
+        
+        companyCards.forEach(card => {
+            const name = card.querySelector('.card-title').textContent.toLowerCase();
+            const industry = card.querySelector('li:nth-child(1)').textContent.toLowerCase();
+            const location = card.querySelector('li:nth-child(2)').textContent.toLowerCase();
+            
+            if (searchTerm === '' || 
+                name.includes(searchTerm) || 
+                industry.includes(searchTerm) || 
+                location.includes(searchTerm)) {
+                card.style.display = 'block';
+                hasVisibleResults = true;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Hide the original "no companies" message when searching
+        if (noCompaniesMessage) {
+            noCompaniesMessage.style.display = searchTerm === '' ? 'block' : 'none';
+        }
+        
+        // Remove any existing "no results" message
+        const existingNoResults = document.querySelector('.alert-warning');
+        if (existingNoResults) {
+            existingNoResults.remove();
+        }
+        
+        // Show new "no results" message only if needed
+        if (!hasVisibleResults && searchTerm !== '' && companyCards.length > 0) {
+            const noResultsDiv = document.createElement('div');
+            noResultsDiv.className = 'col-12';
+            noResultsDiv.innerHTML = '<div class="alert alert-warning">No companies match your search.</div>';
+            companyContainer.appendChild(noResultsDiv);
+        }
+    }
+    
+    // Event listeners
+    searchInput.addEventListener('input', filterCompanies);
+    searchButton.addEventListener('click', filterCompanies);
+    
+    // Clear search when clicking escape
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            filterCompanies();
+        }
+    });
+});
+</script>
+{% endblock %}

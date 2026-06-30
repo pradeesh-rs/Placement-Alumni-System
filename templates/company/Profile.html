@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Company Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #e6f0ff;
+        --secondary: #3a0ca3;
+        --dark: #212529;
+        --light: #f8f9fa;
+        --gray: #6c757d;
+        --border-radius: 12px;
+        --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    body {
+        background-color: #f5f7fb;
+        color: var(--dark);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .profile-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        border: none;
+        overflow: visible;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 2rem;
+        position: relative;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid white;
+        object-fit: cover;
+        box-shadow: var(--box-shadow);
+        margin-top: -60px;
+        background-color: white;
+    }
+    
+    .profile-actions .btn {
+        border-radius: 50px;
+        font-weight: 500;
+        padding: 8px 20px;
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        border: none;
+        transition: transform 0.2s;
+    }
+    
+    .detail-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .detail-card .card-title {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-value {
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    
+    .company-badge {
+        background-color: #6c757d;
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+    }
+    
+    .section-title {
+        color: var(--primary);
+        font-weight: 600;
+        position: relative;
+        padding-bottom: 10px;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 50px;
+        height: 3px;
+        background: var(--primary);
+    }
+    
+    /* Edit Modal Styles */
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    }
+    
+    .avatar-upload {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .avatar-upload .edit {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: var(--box-shadow);
+    }
+    
+    .avatar-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #f0f0f0;
+    }
+    
+    /* Center the image in modal */
+    .avatar-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .profile-header {
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            margin: -60px auto 20px auto;
+        }
+        
+        .profile-actions {
+            justify-content: center !important;
+            margin-bottom: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page %}Profile{% endblock %}
+{% block Main_title %}{% if company %}{{ company.name }}{% else %}Company Profile{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if company %}
+    <div class="profile-card mb-4">
+        <div class="profile-header d-flex flex-column flex-md-row justify-content-between align-items-md-end">
+            <div class="d-flex flex-column flex-md-row align-items-md-center">
+                <img src="{% if company.profile_picture %}{{ company.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={{ company.name|urlencode }}&background=4361ee&color=fff&size=150{% endif %}" 
+                     class="profile-avatar me-md-4"
+                     width="150"
+                                 height="150"
+                                 style="border-radius: 50%;"
+                     alt="Company Logo">
+                <div>
+                    <h1 class="h3 mb-1">{{ company.name }}</h1>
+                    <p class="mb-0 opacity-75">
+                        <span class="company-badge">{{ company.industry_type }}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="profile-actions d-flex mt-3 mt-md-0">
+                <button class="btn btn-light me-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="bi bi-pencil-fill me-1"></i> Edit Profile
+                </button>
+                
+            </div>
+        </div>
+        
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Contact Information</h5>
+                        <ul class="list-unstyled mt-3">
+                            <li class="mb-2"><strong>Email:</strong> {{ company.email }}</li>
+                            <li class="mb-2"><strong>Phone:</strong> {{ company.phone }}</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Location</h5>
+                        <ul class="list-unstyled mt-3">
+                            <li class="mb-2"><strong>Address:</strong> {{ company.location }}</li>
+                            
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="detail-card h-100 p-3">
+                        <h5 class="card-title">Company Details</h5>
+                        <ul class="list-unstyled mt-3">
+                            <li class="mb-2"><strong>Industry:</strong> {{ company.industry_type }}</li>
+                          
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+           
+        </div>
+    </div>
+    {% else %}
+    <div class="profile-card text-center p-5">
+        <div class="mb-4">
+            <img src="https://ui-avatars.com/api/?name=Company&background=4361ee&color=fff&size=150" 
+                 class="profile-avatar" 
+                 width="150"
+                                 height="150"
+                                 style="border-radius: 50%;"
+                 alt="Company Logo">
+        </div>
+        <h3 class="mb-3">No Profile Found</h3>
+        <p class="text-muted mb-4">You haven't created your company profile yet. Click the button below to get started.</p>
+        <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+            <i class="bi bi-plus-circle-fill me-2"></i> Create Profile
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProfileModalLabel">{% if company %}Edit{% else %}Create{% endif %} Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                {% if company %}
+                <input type="hidden" name="hide" value="edit">
+                {% endif %}
+                <div class="modal-body">
+                    <div class="avatar-container text-center">
+                        <div class="avatar-upload">
+                            <img id="profilePreview" 
+                                 src="{% if company and company.profile_picture %}{{ company.profile_picture.url }}{% else %}https://ui-avatars.com/api/?name={% if company %}{{ company.name|urlencode }}{% else %}Company{% endif %}&background=4361ee&color=fff&size=150{% endif %}" 
+                                 class="avatar-preview"
+                                 width="150"
+                                 height="150"
+                                 style="border-radius: 50%;"
+                                 alt="Company Logo">
+                            <div class="edit">
+                                <i class="bi bi-camera-fill"></i>
+                                <input type="file" name="profile_picture" id="id_profile_picture" class="d-none" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mb-4 small text-muted">JPG or PNG, max 2MB</div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company Name *</label>
+                            <input type="text" name="name" value="{{ company.name|default:'' }}" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Industry Type *</label>
+                            <select name="industry_type" class="form-select" required>
+                                <option value="">Select Industry Type</option>
+                                <option value="IT Services" {% if company.industry_type == "IT Services" %}selected{% endif %}>IT Services</option>
+                                <option value="Finance" {% if company.industry_type == "Finance" %}selected{% endif %}>Finance</option>
+                                <option value="Manufacturing" {% if company.industry_type == "Manufacturing" %}selected{% endif %}>Manufacturing</option>
+                                <option value="Healthcare" {% if company.industry_type == "Healthcare" %}selected{% endif %}>Healthcare</option>
+                                <option value="Education" {% if company.industry_type == "Education" %}selected{% endif %}>Education</option>
+                                <option value="Retail" {% if company.industry_type == "Retail" %}selected{% endif %}>Retail</option>
+                                <option value="Telecommunications" {% if company.industry_type == "Telecommunications" %}selected{% endif %}>Telecommunications</option>
+                                <option value="Other" {% if company.industry_type == "Other" %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" value="{{ company.email|default:'' }}" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone *</label>
+                            <input type="tel" name="phone" value="{{ company.phone|default:'' }}" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Location *</label>
+                            <input type="text" name="location" value="{{ company.location|default:'' }}" class="form-control" required>
+                        </div>
+                        
+                        
+                        
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Store the original image source
+    let originalImageSrc = document.getElementById('profilePreview').src;
+    let fileInput = document.getElementById('id_profile_picture');
+    let profilePreview = document.getElementById('profilePreview');
+    let editButton = document.querySelector('.avatar-upload .edit');
+    
+    if (editButton && fileInput) {
+        editButton.addEventListener('click', function() {
+            fileInput.click();
+        });
+    }
+    
+    if (fileInput && profilePreview) {
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file && file.type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Reset to original image when modal is closed without saving
+    const editModal = document.getElementById('editProfileModal');
+    if (editModal) {
+        editModal.addEventListener('hidden.bs.modal', function() {
+            profilePreview.src = originalImageSrc;
+            fileInput.value = '';
+            
+            const form = this.querySelector('form');
+            if (form) {
+                form.classList.remove('was-validated');
+            }
+        });
+    }
+    
+    
+});
+</script>
+{% endblock %}

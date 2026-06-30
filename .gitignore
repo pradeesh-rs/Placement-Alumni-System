@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Django
+*.sqlite3-journal
+
+# VS Code
+.vscode/
+
+# Environment variables
+.env
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Node
+node_modules/
+
+# Test outputs
+test/
+runs/

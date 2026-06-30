@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} 
+Placement Report 
+{% endblock %}
+
+{% block page %} 
+Placement Report 
+{% endblock %}
+
+{% block Main_title  %} 
+Placement Statistics Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Year Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Filter by Year</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="form-inline">
+                        {% csrf_token %}
+                        <div class="form-group mr-3">
+                            <label for="year" class="mr-2">Select Year:</label>
+                            <select name="year" id="year" class="form-control">
+                                <option value="">All Years </option>
+                                {% for year in available_years %}
+                                    <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>
+                                        {{ year }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-4">Apply Filter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Students</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Placed Students</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_placed_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Not Placed Students</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_not_placed_students }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-search fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Companies</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_company }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Placement Status Pie Chart -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Placement Status</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2" style="height: 300px;">
+                        <canvas id="placementPieChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Placed
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-info"></i> Not Placed
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Company-wise Placements Bar Chart -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Company-wise Placements</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar" style="height: 300px;">
+                        <canvas id="companyBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Tables Row -->
+    <div class="row">
+        <!-- Top Companies Table -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Hiring Companies</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Company Name</th>
+                                    <th>Students Hired</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for company in company_placed_students %}
+                                <tr>
+                                    <td>{{ company.company_name }}</td>
+                                    <td>{{ company.placed_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No placement data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Details Table -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Placements</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Company</th>
+                                    <th>Job Title</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in placed_students|slice:":10" %}
+                                <tr>
+                                    <td>{{ student.name }}</td>
+                                    <td>
+                                        {% for job in student.job_info.all %}
+                                            {{ job.company_name }}<br>
+                                        {% empty %}
+                                            Not Placed
+                                        {% endfor %}
+                                    </td>
+                                    </td>
+                                    <td>
+                                        {% for job in student.job_info.all %}
+                                            {{ job.job_title }}<br>
+                                        {% empty %}
+                                            Not Placed
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No placement data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// === Auto-color generation ===
+function generateColorArray(length, opacity = 1) {
+    const baseColors = [
+        [78, 115, 223],
+        [28, 200, 138],
+        [54, 185, 204],
+        [246, 194, 62],
+        [231, 74, 59],
+        [231, 184, 132]
+    ];
+    const colors = [];
+    for (let i = 0; i < length; i++) {
+        const [r, g, b] = baseColors[i % baseColors.length];
+        colors.push(`rgba(${r}, ${g}, ${b}, ${opacity})`);
+    }
+    return colors;
+}
+
+// === Placement Status Pie Chart ===
+var ctx = document.getElementById("placementPieChart");
+var placementPieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ["Placed Students", "Not Placed Students"],
+        datasets: [{
+            data: [{{ total_placed_students }}, {{ total_not_placed_students }}],
+            backgroundColor: ['#1cc88a', '#36b9cc'],
+            hoverBackgroundColor: ['#17a673', '#2c9faf'],
+            hoverBorderColor: "rgba(234, 236, 244, 1)",
+        }],
+    },
+    options: {
+        maintainAspectRatio: false,
+        tooltips: {
+            backgroundColor: "rgb(255,255,255)",
+            bodyFontColor: "#858796",
+            borderColor: '#dddfeb',
+            borderWidth: 1,
+            xPadding: 15,
+            yPadding: 15,
+            displayColors: false,
+            caretPadding: 10,
+        },
+        legend: {
+            display: false
+        },
+        cutoutPercentage: 80,
+    },
+});
+
+// === Company Placement Bar Chart ===
+const companyLabels = [
+    {% for company in company_placed_students %}
+        "{{ company.company_name }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+const companyData = [
+    {% for company in company_placed_students %}
+        {{ company.placed_count }}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+const backgroundColors = generateColorArray(companyLabels.length, 0.8);
+const hoverColors = generateColorArray(companyLabels.length, 1);
+const borderColors = generateColorArray(companyLabels.length, 1);
+
+var ctx = document.getElementById("companyBarChart");
+var companyBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: companyLabels,
+        datasets: [{
+            label: "Placements",
+            backgroundColor: backgroundColors,
+            hoverBackgroundColor: hoverColors,
+            borderColor: borderColors,
+            borderWidth: 1,
+            data: companyData,
+        }],
+    },
+    options: {
+        maintainAspectRatio: false,
+        layout: {
+            padding: {
+                left: 10,
+                right: 25,
+                top: 25,
+                bottom: 0
+            }
+        },
+        scales: {
+            xAxes: [{
+                gridLines: {
+                    display: false,
+                    drawBorder: false
+                },
+                ticks: {
+                    maxTicksLimit: 20
+                },
+                maxBarThickness: 25,
+            }],
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true,
+                    // No max value → Chart.js will auto-scale
+                    maxTicksLimit: 5,
+                    padding: 10,
+                },
+                gridLines: {
+                    color: "rgb(234, 236, 244)",
+                    zeroLineColor: "rgb(234, 236, 244)",
+                    drawBorder: false,
+                    borderDash: [2],
+                    zeroLineBorderDash: [2]
+                }
+            }],
+        },
+        legend: {
+            display: true,
+            position: 'bottom',
+            onClick: (e) => e.stopPropagation(),
+            labels: {
+                generateLabels: function(chart) {
+                    const datasets = chart.data.datasets;
+                    return chart.data.labels.map((label, i) => {
+                        return {
+                            text: label,
+                            fillStyle: datasets[0].backgroundColor[i],
+                            strokeStyle: datasets[0].borderColor[i],
+                            lineWidth: 1,
+                            hidden: false,
+                            index: i
+                        };
+                    });
+                }
+            }
+        },
+        tooltips: {
+            titleMarginBottom: 10,
+            titleFontColor: '#6e707e',
+            titleFontSize: 14,
+            backgroundColor: "rgb(255,255,255)",
+            bodyFontColor: "#858796",
+            borderColor: '#dddfeb',
+            borderWidth: 1,
+            xPadding: 15,
+            yPadding: 15,
+            displayColors: true,
+            caretPadding: 10,
+            callbacks: {
+                label: function(tooltipItem, data) {
+                    return data.labels[tooltipItem.index] + ': ' + tooltipItem.yLabel;
+                }
+            }
+        },
+    }
+});
+</script>
+{% endblock %}

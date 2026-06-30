@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Company Dashboard
+{% endblock %}
+
+{% block page %}
+    Company Dashboard
+{% endblock %}
+
+{% block Main_title %}
+    Company Dashboard
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Company Profile Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body d-flex align-items-center">
+            {% if company.profile_picture %}
+                <img src="{{ company.profile_picture.url }}" alt="Profile Picture" class="rounded-circle me-3" style="width:70px; height:70px;">
+            {% else %}
+                <i class="bi bi-building fs-1 text-secondary me-3"></i>
+            {% endif %}
+            <div>
+                <h4 class="mb-0">{{ company.name }}</h4>
+                <small class="text-muted">{{ company.industry_type }} • {{ company.location }}</small><br>
+                <small>Email: {{ company.email }} | Phone: {{ company.phone }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card text-center border-success shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-briefcase-fill fs-3 text-success"></i>
+                    <h5 class="mt-2">Active Jobs</h5>
+                    <p class="fs-4 fw-bold">{{ total_jobs }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-center border-info shadow-sm">
+                <div class="card-body">
+                    <i class="bi bi-people-fill fs-3 text-info"></i>
+                    <h5 class="mt-2">Total Applicants</h5>
+                    <p class="fs-4 fw-bold">{{ total_applicants }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ 
+
+    <!-- Recent Applicants -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <i class="bi bi-person-lines-fill me-1"></i> Recent Applicants
+        </div>
+        <div class="card-body">
+            {% if recent_applicants %}
+                <ul class="list-group list-group-flush">
+                    {% for app in recent_applicants %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ app.user.user.first_name }} {{ app.user.name }}</strong>
+                            <br>
+                            <small class="text-muted">Applied for: {{ app.job.title }}</small>
+                        </div>
+                        <span class="badge bg-primary">{{ app.date_applied }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No recent applicants.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

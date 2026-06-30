@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CGPA Calculator | Academic Grade Tracker</title>
+
+    <!-- Bootstrap 5 CSS + Icons + SweetAlert2 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.18/dist/sweetalert2.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: linear-gradient(145deg, #e9eff5 0%, #dce3ec 100%);
+        font-family:
+          "Inter", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        min-height: 100vh;
+        padding: 30px 20px;
+      }
+
+      /* custom container with glassmorphism touch */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(2px);
+        border-radius: 32px;
+        box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease;
+      }
+
+      .container-custom {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 28px 32px;
+      }
+
+      h2 {
+        font-weight: 800;
+        background: linear-gradient(135deg, #1f2b3c, #2c3e50);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        letter-spacing: -0.3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .btn-outline-primary-custom {
+        border-radius: 40px;
+        padding: 8px 20px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .result-entry {
+        background: #eef7f0;
+        border-left: 6px solid #2b7e3a;
+        padding: 14px 20px;
+        margin-bottom: 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        color: #1a4d2a;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        transition: all 0.2s;
+      }
+
+      .result-entry i {
+        font-size: 1.5rem;
+        color: #2b7e3a;
+      }
+
+      .cgpa-box {
+        background: #d9eefb;
+        border-left: 6px solid #1f6e8c;
+        padding: 20px 28px;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #0e4b64;
+        border-radius: 28px;
+        margin-top: 25px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .table-container {
+        border-radius: 24px;
+        overflow-x: auto;
+        margin: 20px 0 20px;
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead th {
+        background: #2c3e50 !important;
+        color: white;
+        font-weight: 600;
+        padding: 14px 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      tbody tr:hover {
+        background-color: #f8f9fc;
+        cursor: pointer;
+        transition: 0.1s;
+      }
+
+      select.form-select-sm {
+        border-radius: 30px;
+        background-color: #fef9e6;
+        font-weight: 500;
+        text-align: center;
+        cursor: pointer;
+        border: 1px solid #dee2e6;
+        transition: 0.2s;
+      }
+
+      select.form-select-sm:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+      }
+
+      .btn-glow {
+        border-radius: 60px;
+        padding: 10px 28px;
+        font-weight: 600;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s;
+      }
+
+      .btn-glow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+      }
+
+      .badge-credit {
+        background: #e9ecef;
+        border-radius: 30px;
+        padding: 2px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 0.8rem;
+        color: #6c757d;
+      }
+
+      @media (max-width: 640px) {
+        .container-custom {
+          padding: 20px 18px;
+        }
+        .cgpa-box {
+          font-size: 1.2rem;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-custom glass-card">
+      <!-- Header with actions -->
+      <div class="action-bar">
+        <h2>
+          <i
+            class="bi bi-calculator-fill"
+            style="background: none; color: #2c3e50"
+          ></i>
+          SGPA / CGPA Architect
+        </h2>
+        <div>
+          <a
+            href="{% url 'student:profile' %}"
+            class="btn btn-outline-primary me-2"
+            ><i class="bi bi-person"></i> Back to Profile</a
+          >
+          <button
+            id="fakeBackBtn"
+            class="btn btn-outline-secondary me-2"
+            onclick="window.location.reload()"
+          >
+            <i class="bi bi-arrow-repeat"></i> Reset
+          </button>
+        </div>
+      </div>
+      {% csrf_token %}
+
+      <!-- Branch & Semester selection (mocked but fully functional) -->
+      <div class="row g-4 mb-5">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold"
+            ><i class="bi bi-building"></i> Branch / Department</label
+          >
+          <select id="branchInput" class="form-select">
+            <option value="CHE">CHE</option>
+            <option value="CT">Computer Technology (CT)</option>
+            <option value="Electronics Engineering">
+              Electronics Engineering
+            </option>
+          </select>
+          <input type="hidden" id="department" value="CT" />
+          <small class="text-muted">(Preloaded: CSE / CT curriculum)</small>
+        </div>
+        <div class="col-md-6">
+          <label for="semester" class="form-label fw-semibold"
+            ><i class="bi bi-journal-bookmark-fill"></i> Select Semester</label
+          >
+          <select id="semester" class="form-select">
+            <option value="">-- Choose Semester --</option>
+            <option value="Semester 1">Semester 1</option>
+            <option value="Semester 2">Semester 2</option>
+            <option value="Semester 3">Semester 3</option>
+            <option value="Semester 4">Semester 4</option>
+            <option value="Semester 5">Semester 5</option>
+            <option value="Semester 6">Semester 6</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Start button -->
+      <div class="text-center mb-4">
+        <button
+          onclick="startSemester()"
+          class="btn btn-primary btn-glow px-5 py-2"
+        >
+          <i class="bi bi-play-fill"></i> Load Subjects & Enter Grades
+        </button>
+      </div>
+
+      <!-- Dynamic subjects container (grades table) -->
+      <div id="subjectsContainer" class="mb-4"></div>
+
+      <!-- Saved results panel -->
+      <div id="results" class="mt-4"></div>
+      <footer>
+        <i class="bi bi-star-fill text-warning"></i> Grade mapping: S(10), A(9),
+        B(8), C(7), D(6), E(5), F(0)
+      </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.18/dist/sweetalert2.all.min.js"></script>
+
+    <script>
+        // ---------- GRADE MAPPING ----------
+        const gradePoints = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0 };
+
+        // ---------- COMPREHENSIVE SUBJECTS DATA (based on typical CT / CSE curriculum) ----------
+        const subjectsData = {
+        "CHE": {
+          "Semester 1": [
+        { code: "1001", name: "Communication Skills in English", credit: 4 },
+        { code: "1002", name: "Mathematics I", credit: 5 },
+        { code: "1003", name: "Applied Physics I", credit: 3 },
+        { code: "1004", name: "Applied Chemistry", credit: 3 },
+        { code: "1005", name: "Engineering Graphics", credit: 1.5 },
+        { code: "1007", name: "Applied Chemistry Lab", credit: 1 },
+        { code: "1008", name: "Introduction to IT Systems Lab", credit: 2 },
+        { code: "1009", name: "Sports and Yoga", credit: 1 }
+          ],
+          "Semester 2": [
+            { code: "2002", name: "Mathematics II", credit: 4 },
+            { code: "2003", name: "Applied Physics II", credit: 3 },
+            { code: "2001", name: "Environmental Science", credit: 0 },
+            { code: "2031", name: "Fundamentals of Electrical & Electronics Engineering", credit: 3 },
+            { code: "2131", name: "Problem Solving and Programming", credit: 3 },
+            { code: "2008", name: "Communication Skills in English Lab", credit: 1.5 },
+            { code: "2006", name: "Applied Physics Lab", credit: 1 },
+            { code: "2039", name: "Fundamentals of Electrical & Electronics Engineering Lab", credit: 0 },
+            { code: "2139", name: "Problem Solving and Programming Lab", credit: 0 },
+            { code: "2009", name: "Engineering Workshop Practice", credit: 1.5 }
+          ],
+          "Semester 3": [
+            { code: "3009", name: "Internship I", credit: 2 },
+            { code: "3151", name: "Computer System Architecture", credit: 4 },
+            { code: "3132", name: "Programming in C", credit: 3 },
+            { code: "3152", name: "Computer Networks I", credit: 4 },
+            { code: "3134", name: "Digital Computer Fundamentals", credit: 3 },
+            { code: "3135", name: "Programming in C Lab", credit: 1.5 },
+            { code: "3157", name: "System Administration Lab", credit: 1.5 },
+            { code: "3137", name: "Digital Computer Fundamentals Lab", credit: 1.5 },
+            { code: "3158", name: "Computer Hardware Lab I", credit: 1.5 },
+            { code: "3159", name: "Application Development Lab", credit: 0 }
+          ],
+          "Semester 4": [
+            { code: "4131", name: "Object Oriented Programming", credit: 4 },
+            { code: "4151", name: "Computer Networks II", credit: 4 },
+            { code: "4152", name: "Embedded System and Real Time Operating System", credit: 4 },
+            { code: "4001", name: "Community Skills in Indian Knowledge System", credit: 0 },
+            { code: "4136", name: "Object Oriented Programming Lab", credit: 1.5 },
+            { code: "4157", name: "Network Administration Lab I", credit: 1.5 },
+            { code: "4158", name: "Embedded System Lab", credit: 1.5 },
+            { code: "4159", name: "Computer Hardware Lab II", credit: 0 },
+            { code: "4006", name: "Minor Project", credit: 2 }
+          ],
+          "Semester 5": [
+          { code: "5009", name: "Internship II", credit: 3 },
+          { code: "5002", name: "Project Management and Software Engineering", credit: 0 },
+          { code: "5151", name: "Internet of Things", credit: 4 },
+          { code: "5132", name: "Operating System", credit: 4 },
+          { code: "5152A", name: "Web Programming", credit: 4 },
+          { code: "5157", name: "Internet of Things Lab", credit: 1.5 },
+          { code: "5158", name: "Network Administration Lab II", credit: 1.5 },
+          { code: "5159A", name: "Web Programming Lab", credit: 1.5 },
+          { code: "5008", name: "Seminar", credit: 1 }
+        ],
+
+        "Semester 6": [
+          { code: "6001", name: "Entrepreneurship and Startup", credit: 4 },
+          { code: "", name: "Program Elective Course 3", credit: 4 },
+          { code: "", name: "Open Elective Course 1", credit: 4 },
+          { code: "6002", name: "Indian Constitution", credit: 0 },
+          { code: "6157", name: "Programming Smart Device Lab", credit: 2.5 },
+          { code: "", name: "Program Elective Course 4", credit: 1.5 },
+          { code: "", name: "Program Elective Course 5", credit: 1.5 },
+          { code: "6009", name: "Major Project", credit: 4 }
+        ]
+      },
+
+
+
+
+
+        "Electronics Engineering": {
+          "Semester 1": [
+            { code: "1001", name: "Commuication Skills in English", credit: 4 },
+            { code: "1002", name: "Mathematics I", credit: 5 },
+            { code: "1003", name: "Applied Physics I", credit: 3 },
+            { code: "1004", name: "Applied Chemistry", credit: 3 },
+            { code: "1005", name: "Engineering Graphics", credit: 1.5 },
+            { code: "2006", name: "Applied Physics Lab", credit: 2 },
+            { code: "1007", name: "Applied Chemistry Lab", credit: 2 },
+            { code: "1008", name: "Introduction to IT systems Lab", credit: 3 },
+            { code: "2009", name: "Engineering Workshop Practice", credit: 3 },
+            { code: "1009", name: "Sports and Yoga", credit: 2 }
+          ],
+          "Semester 2": [
+            { code: "2002", name: "Mathematics II", credit: 4 },
+            { code: "2003", name: "Applied Physics II", credit: 3 },
+            { code: "2001", name: "Environmental Science", credit: 0 },
+            { code: "2031", name: "Fundamentals of Electrical & Electronics Engineering", credit: 3 },
+            { code: "2141", name: "Basic Electronics", credit: 3 },
+            { code: "2008", name: "Communication Skills in English Lab", credit: 1.5 },
+            { code: "2006", name: "Applied Physics Lab", credit: 1 },
+            { code: "2039", name: "Fundamentals of Electrical & Electronics Engineering Lab", credit: 0 },
+            { code: "2149", name: "Electronics Tinkering Workshop", credit: 0 },
+            { code: "2009", name: "Engineering Workshop Practice", credit: 1.5 }
+          ],
+          "Semester 3": [
+            { code: "3009", name: "Internship I", credit: 2 },
+            { code: "3041", name: "Electric Circuits & Networks", credit: 3 },
+            { code: "3042", name: "Principles of Electronic Communication", credit: 3 },
+            { code: "3043", name: "Electronic Circuits", credit: 4 },
+            { code: "3044", name: "Digital Electronics", credit: 4 },
+            { code: "3045", name: "Fundamentals of C Programming", credit: 0 },
+            { code: "3046", name: "Principles of Electronic Communication Lab", credit: 1.5 },
+            { code: "3047", name: "Electronic Circuits Lab", credit: 1.5 },
+            { code: "3048", name: "Digital Electronics Lab", credit: 1.5 },
+            { code: "3049", name: "Fundamentals of C programming Lab", credit: 1.5 }
+          ],
+          "Semester 4": [
+            { code: "4041", name: "Microcontroller and Applications", credit: 4 },
+            { code: "4042", name: "Electronic Measurements and Instrumentation", credit: 4 },
+            { code: "4043", name: "Linear Integrated Circuits", credit: 4 },
+            { code: "4001", name: "Community Skills in Indian Knowledge System", credit: 0 },
+            { code: "4046", name: "Microcontroller and Applications Lab", credit: 1.5 },
+            { code: "4047", name: "Linear Integrated Lab", credit: 1.5 },
+            { code: "4048", name: "PCB and Prototyping Workshop", credit: 1.5 },
+            { code: "4049", name: "Python Programming Lab", credit: 0 },
+            { code: "4009", name: "Minor Project", credit: 2 }
+          ]
+        },
+
+        "CT": {
+          "Semester 1": [
+            { code: "1001", name: "Commuication Skills in English", credit: 4 },
+            { code: "1002", name: "Mathematics I", credit: 5 },
+            { code: "1003", name: "Applied Physics I", credit: 3 },
+            { code: "1004", name: "Applied Chemistry", credit: 3 },
+            { code: "1005", name: "Engineering Graphics", credit: 1.5 },
+            { code: "2006", name: "Applied Physics Lab", credit: 2 },
+            { code: "1007", name: "Applied Chemistry Lab", credit: 2 },
+            { code: "1008", name: "Introduction to IT systems Lab", credit: 3 },
+            { code: "2009", name: "Engineering Workshop Practice", credit: 3 },
+            { code: "1009", name: "Sports and Yoga", credit: 2 }
+          ],
+          "Semester 2": [
+            { code: "2002", name: "Mathematics II", credit: 4 },
+            { code: "2003", name: "Applied Physics II", credit: 3 },
+            { code: "2001", name: "Environmental Science", credit: 0 },
+            { code: "2031", name: "Fundamentals of Electrical & Electronics Engineering", credit: 3 },
+            { code: "2131", name: "Problem Solving and Programming", credit: 3 },
+            { code: "2008", name: "Communication Skills in English Lab", credit: 1.5 },
+            { code: "2006", name: "Applied Physics Lab", credit: 1 },
+            { code: "2039", name: "Fundamentals of Electrical & Electronics Engineering Lab", credit: 0 },
+            { code: "2139", name: "Problem Solving and Programming Lab", credit: 0 },
+            { code: "2009", name: "Engineering Workshop Practice", credit: 1.5 }
+          ],
+          "Semester 3": [
+            { code: "3009", name: "Internship I", credit: 2 },
+            { code: "3131", name: "Computer Organisation", credit: 4 },
+            { code: "3132", name: "Programming in C", credit: 3 },
+            { code: "3133", name: "Database Management System", credit: 3 },
+            { code: "3134", name: "Digital Computer Fundamentals", credit: 3 },
+            { code: "3135", name: "Programming in C Lab", credit: 1.5 },
+            { code: "3136", name: "Database Management System Lab", credit: 1.5 },
+            { code: "3137", name: "Digital Computer Fundamentals Lab", credit: 1.5 },
+            { code: "3138", name: "Web Technology Lab", credit: 2.5 },
+            { code: "3139", name: "Computer System hardware Lab", credit: 0 }
+          ],
+          "Semester 4": [
+            { code: "4131", name: "Object Oriented Programming", credit: 4 },
+            { code: "4132", name: "Computer Communication and Networks", credit: 3 },
+            { code: "4133", name: "Data Structures", credit: 4 },
+            { code: "4001", name: "Community Skills in Indian Knowledge System", credit: 0 },
+            { code: "4136", name: "Object Oriented Programming Lab", credit: 1.5 },
+            { code: "4137", name: "Web Programming Lab", credit: 2.5 },
+            { code: "4138", name: "Data Structures Lab", credit: 1.5 },
+            { code: "4139", name: "Application Development Lab", credit: 0 },
+            { code: "4006", name: "Minor Project", credit: 2 }
+          ]
+        },
+        "Electronics Engineering": {
+          "Semester 1": [
+            { code: "1001", name: "Commuication Skills in English", credit: 4 },
+            { code: "1002", name: "Mathematics I", credit: 5 },
+            { code: "1003", name: "Applied Physics I", credit: 3 },
+            { code: "1004", name: "Applied Chemistry", credit: 3 },
+            { code: "1005", name: "Engineering Graphics", credit: 1.5 },
+            { code: "2006", name: "Applied Physics Lab", credit: 2 },
+            { code: "1007", name: "Applied Chemistry Lab", credit: 2 },
+            { code: "1008", name: "Introduction to IT systems Lab", credit: 3 },
+            { code: "2009", name: "Engineering Workshop Practice", credit: 3 },
+            { code: "1009", name: "Sports and Yoga", credit: 2 }
+          ],
+          "Semester 2": [
+            { code: "2002", name: "Mathematics II", credit: 4 },
+            { code: "2003", name: "Applied Physics II", credit: 3 },
+            { code: "2001", name: "Environmental Science", credit: 0 },
+            { code: "2031", name: "Fundamentals of Electrical & Electronics Engineering", credit: 3 },
+            { code: "2141", name: "Basic Electronics", credit: 3 },
+            { code: "2008", name: "Communication Skills in English Lab", credit: 1.5 },
+            { code: "2006", name: "Applied Physics Lab", credit: 1 },
+            { code: "2039", name: "Fundamentals of Electrical & Electronics Engineering Lab", credit: 0 },
+            { code: "2149", name: "Electronics Tinkering Workshop", credit: 0 },
+            { code: "2009", name: "Engineering Workshop Practice", credit: 1.5 }
+          ],
+          "Semester 3": [
+            { code: "3009", name: "Internship I", credit: 2 },
+            { code: "3041", name: "Electric Circuits & Networks", credit: 3 },
+            { code: "3042", name: "Principles of Electronic Communication", credit: 3 },
+            { code: "3043", name: "Electronic Circuits", credit: 4 },
+            { code: "3044", name: "Digital Electronics", credit: 4 },
+            { code: "3045", name: "Fundamentals of C Programming", credit: 0 },
+            { code: "3046", name: "Principles of Electronic Communication Lab", credit: 1.5 },
+            { code: "3047", name: "Electronic Circuits Lab", credit: 1.5 },
+            { code: "3048", name: "Digital Electronics Lab", credit: 1.5 },
+            { code: "3049", name: "Fundamentals of C programming Lab", credit: 1.5 }
+          ],
+          "Semester 4": [
+            { code: "4041", name: "Microcontroller and Applications", credit: 4 },
+            { code: "4042", name: "Electronic Measurements and Instrumentation", credit: 4 },
+            { code: "4043", name: "Linear Integrated Circuits", credit: 4 },
+            { code: "4001", name: "Community Skills in Indian Knowledge System", credit: 0 },
+            { code: "4046", name: "Microcontroller and Applications Lab", credit: 1.5 },
+            { code: "4047", name: "Linear Integrated Lab", credit: 1.5 },
+            { code: "4048", name: "PCB and Prototyping Workshop", credit: 1.5 },
+            { code: "4049", name: "Python Programming Lab", credit: 0 },
+            { code: "4009", name: "Minor Project", credit: 2 }
+          ]
+        }
+
+        };
+
+        // ---------- LOCAL STORAGE PERSISTENCE (completely replaces Django) ----------
+        // savedResults structure: { "CT - Semester 1": { sgpa: 8.75, totalCredits: 24.5 }, ... }
+        let savedResults = {};
+
+        // Load from localStorage on page init
+        // Load from server data (injected via Django)
+        function loadFromServer() {
+          {% for res in saved_results %}
+            savedResults["{{ res.semester_name }}"] = {
+              sgpa: {{ res.sgpa }},
+              totalCredits: {{ res.total_credits }},
+              id: {{ res.id }}
+            };
+          {% endfor %}
+          console.log("📀 Loaded from Server:", savedResults);
+          showResults();  // update UI
+        }
+
+        // Not needed anymore as we save to database, but kept for partial sync
+        function persistToLocalStorage() {
+          localStorage.setItem("cgpa_semester_results", JSON.stringify(savedResults));
+        }
+
+        // Helper: get current department key
+        function getCurrentDeptKey() {
+          let deptVal = document.getElementById("department").value;
+          if (!deptVal || deptVal === "") deptVal = "CT";
+          return deptVal;
+        }
+
+        // Start semester: load subjects based on branch + semester
+        function startSemester() {
+          const dept = getCurrentDeptKey();
+          const sem = document.getElementById("semester").value;
+          const container = document.getElementById("subjectsContainer");
+
+          if (!sem) {
+            Swal.fire({ icon: 'warning', title: 'Semester missing', text: 'Please select a semester first.', toast: true, timer: 1800, showConfirmButton: false });
+            return;
+          }
+
+          // check if curriculum exists
+          if (!subjectsData[dept] || !subjectsData[dept][sem]) {
+            container.innerHTML = `<div class="alert alert-warning shadow-sm"><i class="bi bi-exclamation-triangle"></i> Curriculum data not available for ${dept} - ${sem}. Try another semester.</div>`;
+            return;
+          }
+
+          const subjects = subjectsData[dept][sem];
+          let html = `<div class="table-container"><table class="table table-bordered"><thead>`;
+          html += `<tr><th>#</th><th>Code</th><th>Subject Name</th><th>Credits</th><th>Grade (S/A/B/C/D/E/F)</th></tr></thead><tbody>`;
+
+          subjects.forEach((subj, idx) => {
+            html += `<tr>
+              <td>${idx+1}</td>
+              <td><span class="badge bg-secondary">${subj.code}</span></td>
+              <td class="text-start fw-medium">${subj.name}</td>
+              <td><span class="badge-credit">${subj.credit} cr</span></td>
+              <td>
+                <select id="grade_${idx}" class="form-select form-select-sm" style="width: auto; min-width: 90px;">
+                  <option value="">— Grade —</option>
+                  ${Object.keys(gradePoints).map(g => `<option value="${g}">${g} (${gradePoints[g]})</option>`).join('')}
+                </select>
+              </td>
+            </tr>`;
+          });
+          html += `</tbody></table></div>
+          <div class="d-flex justify-content-center gap-3 mt-2 mb-3">
+            <button onclick="calculateAndSaveSGPA('${dept}','${sem}')" class="btn btn-success btn-glow px-4"><i class="bi bi-check2-circle"></i> Calculate & Save SGPA</button>
+            <button onclick="document.getElementById('subjectsContainer').innerHTML=''" class="btn btn-outline-secondary">Cancel</button>
+          </div>`;
+          container.innerHTML = html;
+        }
+
+        // Calculate SGPA from selected grades & save to localStorage
+        async function calculateAndSaveSGPA(dept, sem) {
+          const subjects = subjectsData[dept][sem];
+          if (!subjects) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Subject data missing' });
+            return;
+          }
+
+          let totalCredits = 0;
+          let totalPoints = 0;
+          let allSelected = true;
+          const gradeSelections = [];
+
+          for (let i = 0; i < subjects.length; i++) {
+            const gradeSelect = document.getElementById(`grade_${i}`);
+            if (!gradeSelect) continue;
+            const gradeVal = gradeSelect.value;
+            if (!gradeVal) {
+              allSelected = false;
+              break;
+            }
+            const creditVal = subjects[i].credit;
+            const points = gradePoints[gradeVal];
+            if (points === undefined) {
+              allSelected = false;
+              break;
+            }
+            totalCredits += creditVal;
+            totalPoints += creditVal * points;
+            gradeSelections.push({ subject: subjects[i].name, grade: gradeVal, credit: creditVal });
+          }
+
+          if (!allSelected) {
+            Swal.fire({ icon: 'error', title: 'Incomplete grades', text: 'Please select a grade for every subject before saving.', timer: 2000, showConfirmButton: false });
+            return;
+          }
+
+          if (totalCredits === 0) {
+            Swal.fire({ icon: 'error', title: 'Zero credits', text: 'Cannot compute SGPA with zero credits.' });
+            return;
+          }
+
+          const sgpa = (totalPoints / totalCredits).toFixed(3);
+          const sgpaNum = parseFloat(sgpa);
+
+          // Build unique key for semester (including branch)
+          const displayKey = `${dept} - ${sem}`;
+
+          // Save to in-memory object (local sync)
+          savedResults[displayKey] = {
+            sgpa: sgpaNum,
+            totalCredits: totalCredits,
+          };
+
+          // Persist to Server
+          const response = await fetch("{% url 'student:cgpa_calculator' %}", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+              },
+              body: JSON.stringify({
+                  semester_name: displayKey,
+                  sgpa: sgpaNum,
+                  total_credits: totalCredits
+              })
+          });
+
+          if (response.ok) {
+              const result = await response.json();
+              console.log("Server response:", result);
+          } else {
+              console.error("Failed to save to server");
+          }
+
+          persistToLocalStorage();
+
+          // Clear subjects container after save
+          document.getElementById("subjectsContainer").innerHTML = '';
+
+          // Refresh results panel
+          showResults();
+
+          // Sweet success alert
+          await Swal.fire({
+            icon: 'success',
+            title: 'SGPA Saved!',
+            html: `<strong>${sem}</strong> → SGPA = <span style="font-size:1.8rem;">${sgpaNum.toFixed(2)}</span><br>Credits: ${totalCredits}`,
+            timer: 2200,
+            showConfirmButton: true,
+            confirmButtonText: 'OK'
+          });
+        }
+
+        // Display all saved SGPA records and compute CGPA
+        function showResults() {
+          const resultsDiv = document.getElementById("results");
+          if (!resultsDiv) return;
+
+          const entries = Object.entries(savedResults);
+          if (entries.length === 0) {
+            resultsDiv.innerHTML = `
+              <div class="alert alert-light text-center border rounded-4 p-4 mt-2">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2 mb-0 text-muted">No SGPA records yet. Select a semester and save your grades.</p>
+              </div>`;
+            return;
+          }
+
+          let html = `<h4 class="mt-2 fw-bold"><i class="bi bi-pie-chart"></i> Saved Semester Performances</h4>`;
+          let totalWeightedPoints = 0;
+          let totalWeightedCredits = 0;
+
+          // sort by semester name (optional)
+          const sorted = entries.sort((a,b) => a[0].localeCompare(b[0]));
+
+          for (let [key, data] of sorted) {
+            const sgpaVal = data.sgpa;
+            const credits = data.totalCredits;
+            totalWeightedPoints += sgpaVal * credits;
+            totalWeightedCredits += credits;
+            html += `<div class="result-entry">
+              <i class="bi bi-trophy-fill"></i>
+              <div><strong>${key}</strong> &nbsp;|&nbsp; <span class="badge bg-success">SGPA: ${sgpaVal.toFixed(2)}</span></div>
+              <div class="ms-auto d-flex align-items-center gap-3">
+                  <small class="text-secondary">📘 ${credits} credits</small>
+                  ${data.id ? `<a href="/student/cgpa-calculator/delete/${data.id}/" class="btn btn-sm btn-outline-danger border-0 p-0" title="Delete record"><i class="bi bi-x-circle-fill"></i></a>` : ''}
+              </div>
+            </div>`;
+          }
+
+          const finalCgpa = totalWeightedCredits > 0 ? (totalWeightedPoints / totalWeightedCredits).toFixed(3) : 0;
+
+          html += `<div class="cgpa-box mt-4">
+            <i class="bi bi-stars fs-2"></i>
+            <span>📊 Cumulative CGPA : <strong style="font-size:2rem; margin-left:8px;">${parseFloat(finalCgpa).toFixed(2)}</strong></span>
+            <span class="badge bg-info text-dark px-3 py-2">based on ${totalWeightedCredits} total credits</span>
+          </div>
+          <div class="d-flex justify-content-center mt-4 gap-3">
+            <a href="{% url 'student:delete_all_cgpa_records' %}" class="btn btn-outline-danger btn-glow"><i class="bi bi-eraser"></i> Delete All Records</button>
+          </div>`;
+
+          resultsDiv.innerHTML = html;
+        }
+
+        // Clear all results from localStorage and memory
+        {% comment %} async function clearAllResults() {
+          const confirmClear = await Swal.fire({
+            title: 'Permanently delete all SGPA records?',
+            text: 'This action cannot be undone. All semester grades and CGPA will be lost.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete everything',
+            cancelButtonText: 'Cancel'
+          });
+
+          if (confirmClear.isConfirmed) {
+            savedResults = {};
+            persistToLocalStorage();  // clear localStorage
+            showResults();            // refresh UI
+            // Also clear any active subjects container if needed
+            const container = document.getElementById("subjectsContainer");
+            if (container) container.innerHTML = '';
+            Swal.fire({
+              icon: 'success',
+              title: 'All cleared',
+              text: 'Your CGPA data has been erased.',
+              timer: 1800,
+              showConfirmButton: false
+            });
+          }
+        } {% endcomment %}
+
+        // optional manual reset branch mapping: on branch input change, we update hidden field
+        function syncBranch() {
+          const branchText = document.getElementById("branchInput").value;
+          let mapBranch = branchText; // Default to the selected value directly
+
+          // Fallback mapping if input values don't match subjectsData keys
+          if (branchText.includes("Computer Technology")) mapBranch = "CT";
+          else if (branchText === "CHE") mapBranch = "CHE";
+          else if (branchText === "Electronics Engineering") mapBranch = "Electronics Engineering";
+
+          document.getElementById("department").value = mapBranch;
+          updateSemesterDropdown(mapBranch);
+        }
+
+        // Dynamically update semester options based on available data
+        function updateSemesterDropdown(dept) {
+          const semSelect = document.getElementById("semester");
+          const currentVal = semSelect.value;
+          const availableSems = subjectsData[dept] ? Object.keys(subjectsData[dept]) : [];
+
+          let html = '<option value="">-- Choose Semester --</option>';
+          availableSems.forEach(sem => {
+              html += `<option value="${sem}" ${currentVal === sem ? 'selected' : ''}>${sem}</option>`;
+          });
+
+          semSelect.innerHTML = html;
+        }
+
+        // Event listeners for branch input (manual)
+        document.getElementById("branchInput")?.addEventListener("input", syncBranch);
+
+        // also add custom listener to reset subjects container on semester change (optional)
+        document.getElementById("semester")?.addEventListener("change", function() {
+          document.getElementById("subjectsContainer").innerHTML = '';
+        });
+
+        // on window load, load from server data
+        window.addEventListener("DOMContentLoaded", () => {
+          loadFromServer();
+          syncBranch();   // ensure department hidden matches initial branch display
+        });
+    </script>
+  </body>
+</html>

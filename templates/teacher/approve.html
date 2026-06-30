@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Approve{% endblock %}
+{% block page %}Approve Request{% endblock %}
+{% block Main_title %}Approve Request{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Toast Messages (already handled in base.html if included) -->
+
+    <!-- Teachers Section -->
+    <h2 class="mb-4">Pending Teachers</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for perm in teachers %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-success border-2">
+                <div class="card-body">
+                    <h5 class="card-title">{{ perm.user.get_full_name|default:perm.user.username }}</h5>
+                    <p class="card-text"><strong>Username:</strong> {{ perm.user.user_permission.username }}</p>
+
+                    <!-- Approve Button -->
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ perm.user.username }}">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+
+                    <!-- Delete Button -->
+                    <form method="post" class="d-inline ms-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ perm.user.username }}">
+                        <input type="hidden" name="action" value="delete">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No teachers awaiting approval.</p>
+        {% endfor %}
+    </div>
+
+    <h2 class="mt-5 mb-4">Assign Roles</h2>
+<div class="row">
+        {% for teacher in approved_teachers %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ teacher.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-4 text-center">
+                            {% if teacher.profile_picture %}
+                                <img src="{{ teacher.profile_picture.url }}" alt="Profile" 
+                                     class="img-thumbnail rounded-circle" 
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={% if teacher %}{{ teacher.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=0D8ABC&color=fff&rounded=true&size=150" alt="Profile" 
+                                     class="img-thumbnail rounded-circle" 
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        <div class="col-8">
+                            <p><strong>Designation:</strong> {{ teacher.designation|default:"Not specified" }}</p>
+                            <p><strong>Department:</strong> {{ teacher.department|default:"Not specified" }}</p>
+                            <p><strong>Email:</strong> {{ teacher.user.email|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        {% if teacher.is_hod %}
+                            <span class="badge bg-success me-1">HOD</span>
+                        {% endif %}
+                        {% if teacher.is_placement_faculty %}
+                            <span class="badge bg-info">Placement</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-sm btn-primary" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#viewModal-{{ teacher.id }}">
+                            View Details
+                        </button>
+                        <button class="btn btn-sm btn-success" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#assignModal-{{ teacher.id }}">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Details Modal -->
+        <div class="modal fade" id="viewModal-{{ teacher.id }}" tabindex="-1" aria-labelledby="viewModalLabel-{{ teacher.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="viewModalLabel-{{ teacher.id }}">Teacher Details - {{ teacher.name }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                {% if teacher.profile_picture %}
+                                    <img src="{{ teacher.profile_picture.url }}" alt="Profile" 
+                                         class="img-fluid rounded" style="max-height: 200px;">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={% if teacher %}{{ teacher.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=0D8ABC&color=fff&rounded=true&size=150" alt="Profile" 
+                                         class="img-fluid rounded" style="max-height: 200px;">
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Name:</strong> {{ teacher.name }}</p>
+                                        <p><strong>Email:</strong> {{ teacher.email }}</p>
+                                        <p><strong>Phone:</strong> {{ teacher.phone }}</p>
+                                        <p><strong>Gender:</strong> {{ teacher.gender }}</p>
+                                        <p><strong>Date of Birth:</strong> {{ teacher.date_of_birth }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Designation:</strong> {{ teacher.designation|default:"Not specified" }}</p>
+                                        <p><strong>Department:</strong> {{ teacher.department|default:"Not specified" }}</p>
+                                        <p><strong>Specialization:</strong> {{ teacher.specialization|default:"Not specified" }}</p>
+                                        <p><strong>Blood Group:</strong> {{ teacher.blood_group }}</p>
+                                        <p><strong>Address:</strong> {{ teacher.address }}</p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="roles-section">
+                                    <h6>Roles:</h6>
+                                    <div>
+                                        {% if teacher.is_hod %}
+                                            <span class="badge bg-success me-2">Head of Department</span>
+                                        {% endif %}
+                                        {% if teacher.is_placement_faculty %}
+                                            <span class="badge bg-info">Placement Faculty</span>
+                                        {% endif %}
+                                        {% if not teacher.is_hod and not teacher.is_placement_faculty %}
+                                            <span class="text-muted">No special roles assigned</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Designation Modal -->
+        <div class="modal fade" id="assignModal-{{ teacher.id }}" tabindex="-1" aria-labelledby="assignModalLabel-{{ teacher.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="assignModalLabel-{{ teacher.id }}">Assign Designation</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" action="{% url 'teacher:assign_designation' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Teacher</label>
+                                <input type="text" class="form-control" value="{{ teacher.name }}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Designation</label>
+                                <select class="form-control" name="designation" required>
+                                    <option value="">Select Designation</option>
+                                    <option value="Mentor" {% if teacher.designation == 'Mentor' %}selected{% endif %}>Mentor</option>
+                                    <option value="Assistant Professor" {% if teacher.designation == 'Assistant Professor' %}selected{% endif %}>Assistant Professor</option>
+                                    <option value="Associate Professor" {% if teacher.designation == 'Associate Professor' %}selected{% endif %}>Associate Professor</option>
+                                    <option value="Professor" {% if teacher.designation == 'Professor' %}selected{% endif %}>Professor</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_placement" id="placement-{{ teacher.id }}" {% if teacher.is_placement_faculty %}checked{% endif %}>
+                                    <label class="form-check-label" for="placement-{{ teacher.id }}">Placement Faculty</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+                        <div class="alert alert-info text-center">
+                            No Teacher found .
+                        </div>
+                    
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

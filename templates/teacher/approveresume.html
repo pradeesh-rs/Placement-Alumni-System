@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Approve Resume{% endblock %}
+{% block page %}Approve Resume{% endblock %}
+{% block Main_title %}Approve Student Resumes{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Pending Resume Approvals</h3>
+        </div>
+        
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Program</th>
+                            <th>Resume</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if student.profile_picture %}
+                                    <img src="{{ student.profile_picture.url }}" class="rounded-circle me-3" width="40" height="40" alt="{{ student.name }}">
+                                    {% else %}
+                                    <div class="rounded-circle bg-light me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0">{{ student.name }}</h6>
+                                        <small class="text-muted">{{ student.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ student.course }} - {{ student.branch }}</td>
+                            <td>
+                                {% if student.resume %}
+                                <a href="{{ student.resume.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-file-pdf"></i> View Resume
+                                </a>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">No Resume</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if student.resume_approved %}
+                                <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    {% if not student.resume_approved %}
+                                    <form method="post" action="{% url 'teacher:resume' %}" class="me-2">
+                                        <input type="hidden" name="s_id" value="{{ student.id }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#feedbackModal{{ student.id }}">
+                                        <i class="fas fa-comment"></i> Feedback
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle me-2"></i> No resumes pending approval
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% for student in students %}
+
+                 <!-- Feedback Modal - Fixed Version -->
+<div class="modal fade" id="feedbackModal{{ student.id }}" tabindex="-1" aria-labelledby="feedbackModalLabel{{ student.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feedbackModalLabel{{ student.id }}">Send Feedback to {{ student.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'teacher:reject_resume' %}" id="feedbackForm{{ student.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="s_id" value="{{ student.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="feedbackMessage{{ student.id }}" class="form-label">Feedback Message</label>
+                        <textarea class="form-control" id="feedbackMessage{{ student.id }}" name="feedback_message" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Send Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{%endfor%}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        white-space: nowrap;
+    }
+    .badge {
+        font-size: 0.85em;
+    }
+</style>
+{% endblock %}
+

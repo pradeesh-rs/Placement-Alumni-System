@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Teacher{% endblock %}
+{% block page %}Teacher{% endblock %}
+{% block Main_title %}Teacher{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Messages Display -->
+    <div class="row">
+        {% for teacher in teachers %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ teacher.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-4 text-center">
+                            {% if teacher.profile_picture %}
+                                <img src="{{ teacher.profile_picture.url }}" alt="Profile" 
+                                     class="img-thumbnail rounded-circle" 
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={% if teacher %}{{ teacher.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=0D8ABC&color=fff&rounded=true&size=150" alt="Profile" 
+                                     class="img-thumbnail rounded-circle" 
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        <div class="col-8">
+                            <p><strong>Designation:</strong> {{ teacher.designation|default:"Not specified" }}</p>
+                            <p><strong>Department:</strong> {{ teacher.department|default:"Not specified" }}</p>
+                            <p><strong>Email:</strong> {{ teacher.email }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        {% if teacher.is_hod %}
+                            <span class="badge bg-success me-1">HOD</span>
+                        {% endif %}
+                        {% if teacher.is_placement_faculty %}
+                            <span class="badge bg-info">Placement</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-sm btn-primary" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#viewModal-{{ teacher.id }}">
+                            View Details
+                        </button>
+                        <button class="btn btn-sm btn-success" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#assignModal-{{ teacher.id }}">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Details Modal -->
+        <div class="modal fade" id="viewModal-{{ teacher.id }}" tabindex="-1" aria-labelledby="viewModalLabel-{{ teacher.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="viewModalLabel-{{ teacher.id }}">Teacher Details - {{ teacher.name }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                {% if teacher.profile_picture %}
+                                    <img src="{{ teacher.profile_picture.url }}" alt="Profile" 
+                                         class="img-fluid rounded" style="max-height: 200px;">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={% if teacher %}{{ teacher.name|urlencode }}{% else %}{{request.user}}{% endif %}&background=0D8ABC&color=fff&rounded=true&size=150" alt="Profile" 
+                                         class="img-fluid rounded" style="max-height: 200px;">
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Name:</strong> {{ teacher.name }}</p>
+                                        <p><strong>Email:</strong> {{ teacher.email }}</p>
+                                        <p><strong>Phone:</strong> {{ teacher.phone }}</p>
+                                        <p><strong>Gender:</strong> {{ teacher.gender }}</p>
+                                        <p><strong>Date of Birth:</strong> {{ teacher.date_of_birth }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Designation:</strong> {{ teacher.designation|default:"Not specified" }}</p>
+                                        <p><strong>Department:</strong> {{ teacher.department|default:"Not specified" }}</p>
+                                        <p><strong>Specialization:</strong> {{ teacher.specialization|default:"Not specified" }}</p>
+                                        <p><strong>Blood Group:</strong> {{ teacher.blood_group }}</p>
+                                        <p><strong>Address:</strong> {{ teacher.address }}</p>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="roles-section">
+                                    <h6>Roles:</h6>
+                                    <div>
+                                        {% if teacher.is_hod %}
+                                            <span class="badge bg-success me-2">Head of Department</span>
+                                        {% endif %}
+                                        {% if teacher.is_placement_faculty %}
+                                            <span class="badge bg-info">Placement Faculty</span>
+                                        {% endif %}
+                                        {% if not teacher.is_hod and not teacher.is_placement_faculty %}
+                                            <span class="text-muted">No special roles assigned</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Designation Modal -->
+        <div class="modal fade" id="assignModal-{{ teacher.id }}" tabindex="-1" aria-labelledby="assignModalLabel-{{ teacher.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="assignModalLabel-{{ teacher.id }}">Assign Designation</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Teacher</label>
+                                <input type="text" class="form-control" value="{{ teacher.name }}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Designation</label>
+                                <select class="form-control" name="designation" required>
+                                    <option value="">Select Designation</option>
+                                    <option value="Assistant Professor" {% if teacher.designation == 'Assistant Professor' %}selected{% endif %}>Assistant Professor</option>
+                                    <option value="Associate Professor" {% if teacher.designation == 'Associate Professor' %}selected{% endif %}>Associate Professor</option>
+                                    <option value="Professor" {% if teacher.designation == 'Professor' %}selected{% endif %}>Professor</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="department{{ teacher.id }}">Department</label>
+                                <select class="form-control" id="department{{ teacher.id }}" name="department" required onchange="updateSpecializations(this, {{ teacher.id }})">
+                                <option value="">Select Department</option>
+                                {% for degree in degrees %}
+                                <option value="{{ degree.degree }}" {% if teacher.department == degree.degree %}selected{% endif %}>
+                                {{ degree.degree }}
+                                </option>
+                                {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="specialization{{ teacher.id }}">Specialization</label>
+                                <select class="form-control" id="specialization{{ teacher.id }}" name="specialization">
+                                <option value="">Select Specialization</option>
+                                {% for spec in specializations %}
+                                {% if teacher.department == spec.degree %}
+                                <option value="{{ spec.specialization }}" {% if teacher.specialization == spec.specialization %}selected{% endif %}>
+                                {{ spec.specialization }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_hod" id="hod-{{ teacher.id }}" {% if teacher.is_hod %}checked{% endif %}>
+                                    <label class="form-check-label" for="hod-{{ teacher.id }}">Head of Department</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_placement" id="placement-{{ teacher.id }}" {% if teacher.is_placement_faculty %}checked{% endif %}>
+                                    <label class="form-check-label" for="placement-{{ teacher.id }}">Placement Faculty</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+                        <div class="alert alert-info text-center">
+                            No Teacher found .
+                        </div>
+                    
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Store all specializations data
+var allSpecializations = [
+{% for spec in specializations %}
+{
+degree: "{{ spec.degree }}",
+specialization: "{{ spec.specialization }}"
+},
+{% endfor %}
+];
+
+function updateSpecializations(selectElement, teacherId) {
+var department = selectElement.value;
+var specializationSelect = $('#specialization' + teacherId);
+
+// Clear existing options
+specializationSelect.empty();
+specializationSelect.append('<option value="">Select Specialization</option>');
+
+// Filter and show only specializations for the selected degree
+allSpecializations.forEach(function(spec) {
+if (spec.degree === department) {
+specializationSelect.append(
+$('<option></option>').val(spec.specialization).text(spec.specialization)
+);
+}
+});
+
+// If department matches teacher's current department, preserve selection
+var currentSpecialization = "{{ teacher.specialization }}";
+if (department === "{{ teacher.department }}" && currentSpecialization) {
+specializationSelect.val(currentSpecialization);
+}
+}
+
+// Initialize specializations when modal opens
+$(document).ready(function() {
+$('[data-toggle="modal"]').on('click', function() {
+var modalId = $(this).data('target');
+var teacherId = modalId.replace('#editTeacherModal', '');
+var departmentSelect = $(modalId).find('select[name="department"]');
+if (departmentSelect.val()) {
+updateSpecializations(departmentSelect[0], teacherId);
+}
+});
+});
+</script>
+{% endblock %}
+
+{% endblock %}

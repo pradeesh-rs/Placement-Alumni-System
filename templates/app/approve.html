@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Approve{% endblock %}
+{% block page %}Approve Request{% endblock %}
+{% block Main_title %}Approve Request{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Toast Messages (already handled in base.html if included) -->
+
+    <!-- Teachers Section -->
+    <h2 class="mb-4">Pending Teachers</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for perm in teacher %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-success border-2">
+                <div class="card-body">
+                    <h5 class="card-title">{{ perm.user.get_full_name|default:perm.user.username }}</h5>
+                    <p class="card-text"><strong>Username:</strong> {{ perm.user.username }}</p>
+
+                    <!-- Approve Button -->
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ perm.user.username }}">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+
+                    <!-- Delete Button -->
+                    <form method="post" class="d-inline ms-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ perm.user.username }}">
+                        <input type="hidden" name="action" value="delete">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No teachers awaiting approval.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Companies Section -->
+    <h2 class="mt-5 mb-4">Pending Companies</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for perm in company %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-info border-2">
+                <div class="card-body">
+                    <h5 class="card-title">{{ perm.user.get_full_name|default:perm.user.username }}</h5>
+                    <p class="card-text"><strong>Username:</strong> {{ perm.user.username }}</p>
+
+                    <!-- Approve Button -->
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ perm.user.username }}">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+
+                    <!-- Delete Button -->
+                    <form method="post" class="d-inline ms-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="username" value="{{ perm.user.username }}">
+                        <input type="hidden" name="action" value="delete">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No companies awaiting approval.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

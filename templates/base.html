@@ -1,0 +1,848 @@
+{%load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %}</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="{% static 'bootstrap.min.css'%}" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="{% static 'bootstrap-icons.css'%}">
+
+  <style>
+    :root {
+      --sidebar-bg: #2c3e50;
+      --sidebar-color: #ecf0f1;
+      --sidebar-hover: #34495e;
+      --sidebar-active: #3498db;
+      --sidebar-width: 250px;
+      --sidebar-collapsed: 80px;
+      --topbar-height: 60px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow-x: hidden;
+      background-color: #f8f9fa;
+    }
+
+    /* Sidebar Styles */
+    #sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: fixed;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-color);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    #sidebar.collapsed {
+      width: var(--sidebar-collapsed);
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      height: var(--topbar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #sidebar.collapsed .sidebar-header {
+      justify-content: center;
+    }
+
+    #sidebar.collapsed .brand-text {
+      display: none;
+    }
+
+    /* Sidebar Menu */
+    .sidebar-menu {
+      padding: 1rem 0;
+    }
+
+    .nav-link {
+      color: var(--sidebar-color);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      border-radius: 0;
+      margin: 0.1rem 0;
+      transition: all 0.2s ease;
+    }
+
+    #sidebar.collapsed .nav-link {
+      padding: 0.75rem;
+      justify-content: center;
+    }
+
+    .nav-link:hover {
+      background: var(--sidebar-hover);
+      color: white;
+    }
+
+    .nav-link.active {
+      background: var(--sidebar-active);
+      color: white;
+    }
+
+    .nav-link i {
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    #sidebar.collapsed .nav-link i {
+      margin-right: 0;
+    }
+
+    .nav-text {
+      transition: opacity 0.3s;
+    }
+
+    #sidebar.collapsed .nav-text {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      position: absolute;
+    }
+
+    /* Tooltip for collapsed menu */
+    #sidebar.collapsed .nav-link::after {
+      content: attr(data-bs-title);
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 1rem;
+      background: #333;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    #sidebar.collapsed .nav-link:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Main Content */
+    #content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+
+    #sidebar.collapsed~#content {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    /* Top Bar */
+    .top-bar {
+      height: var(--topbar-height);
+      background: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    /* Toggle Button */
+    #toggleBtn {
+      border: none;
+      background: transparent;
+      color: var(--sidebar-color);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    #sidebar.collapsed #toggleBtn {
+      transform: rotate(180deg);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+
+      #sidebar.show {
+        transform: translateX(0);
+      }
+
+      #sidebar.collapsed {
+        width: var(--sidebar-width);
+        transform: translateX(-100%);
+      }
+
+      #sidebar.collapsed.show {
+        transform: translateX(0);
+      }
+
+      #content {
+        margin-left: 0 !important;
+      }
+    }
+
+    /* Page Content */
+    .page-content {
+      padding: 2rem;
+    }
+
+    /* Cards */
+    .card {
+      border: none;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+
+    /* =========================
+       Notifications – Visual Upgrade
+       ========================= */
+
+    .dropdown-menu {
+      border-radius: 0.75rem;
+      box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+    }
+
+    /* Base notification item */
+    .notification-item {
+      background-color: #fff;
+      transition: background-color 0.2s ease, transform 0.15s ease;
+      position: relative;
+    }
+
+    /* Hover affordance */
+    .notification-item:hover {
+      background-color: #f5f9ff;
+      transform: translateX(2px);
+    }
+
+    /* Unread state */
+    .notification-unread {
+      background-color: #eef5ff;
+    }
+
+    .notification-unread::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 4px;
+      border-radius: 2px;
+      background-color: #0d6efd;
+      /* Bootstrap primary */
+    }
+
+    /* Read state */
+    .notification-read {
+      background-color: #ffffff;
+      opacity: 0.75;
+    }
+
+    /* Message text */
+    .notification-text {
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+
+    /* Username emphasis */
+    .notification-user {
+      font-weight: 600;
+      color: #212529;
+    }
+
+    /* Read timestamp / subtle metadata (future-proofing) */
+    .notification-meta {
+      font-size: 0.75rem;
+      color: #6c757d;
+    }
+
+    /* Smooth HTMX replacement */
+    .notification-fade {
+      animation: notifFade 0.3s ease forwards;
+    }
+
+    @keyframes notifFade {
+      from {
+        opacity: 0.3;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Badge polish */
+    .badge-custom {
+      font-size: 0.65rem;
+      padding: 0.35em 0.5em;
+    }
+
+    /* =========================
+       Notification Modal Styling
+       ========================= */
+
+    .notification-modal-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Item */
+    .notification-modal-item {
+      padding: 1rem 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      transition: background-color 0.2s ease, transform 0.15s ease;
+      position: relative;
+      display: block;
+    }
+
+    .notification-modal-item:hover {
+      background-color: #f8faff;
+      transform: translateX(2px);
+    }
+
+    /* Content layout */
+    .notification-content {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    /* Avatar circle */
+    .notification-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #dee9ff;
+      color: #0d6efd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    /* Text block */
+    .notification-body {
+      flex-grow: 1;
+    }
+
+    .modal-notification-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    /* Meta (time, etc.) */
+    .modal-notification-meta {
+      font-size: 0.75rem;
+      color: #6c757d;
+    }
+
+    /* Modal Unread highlight */
+    .modal-notification-unread {
+      background-color: #eef5ff;
+    }
+
+    .modal-notification-unread::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 4px;
+      background-color: #0d6efd;
+      border-radius: 2px;
+    }
+
+    /* Modal Read state */
+    .modal-notification-read {
+      opacity: 0.75;
+    }
+
+    /* Toast notifications */
+    #loginToast {
+      z-index: 9999;
+    }
+
+    /* Mobile responsiveness for notifications */
+    @media (max-width: 576px) {
+      .dropdown-menu {
+        width: 300px !important;
+        margin-right: -1rem;
+      }
+
+      .notification-content {
+        gap: 0.5rem;
+      }
+
+      .notification-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+      }
+    }
+
+      {
+      % block extra_css %
+    }
+
+      {
+      % endblock %
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside id="sidebar" class="d-flex flex-column">
+    <div class="sidebar-header">
+      <span class="brand-text fw-bold">{% block page %}{% endblock %}</span>
+      <button id="toggleBtn" class="d-none d-lg-block" aria-label="Toggle sidebar">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-menu flex-grow-1">
+      {% if user_data.is_principal %}
+      <a href="{% url 'app:dashboard' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Dashboard">
+        <i class="bi bi-speedometer2"></i>
+        <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="{% url 'app:allstudents' %}" class="nav-link {% if request.path == '/allusers/' %}active{% endif %}"
+        data-bs-title="All Students">
+        <i class="bi bi-people-fill"></i>
+        <span class="nav-text">All Students</span>
+      </a>
+      <a href="{% url 'app:alumni' %}" class="nav-link {% if request.path == '/alumni/' %}active{% endif %}"
+        data-bs-title="Alumni">
+        <i class="bi bi-mortarboard"></i>
+        <span class="nav-text">Alumni</span>
+      </a>
+      <a href="{% url 'app:approve' %}" class="nav-link" data-bs-title="Approve Request">
+        <i class="bi bi-check-circle-fill"></i>
+        <span class="nav-text">Approve Request</span>
+      </a>
+      <a href="{% url 'app:teacher' %}" class="nav-link" data-bs-title="Teachers">
+        <i class="bi bi-person-badge-fill"></i>
+        <span class="nav-text">Teachers</span>
+      </a>
+      <a href="{% url 'app:company' %}" class="nav-link" data-bs-title="Companies">
+        <i class="bi bi-building"></i>
+        <span class="nav-text">Companies</span>
+      </a>
+
+      <a href="{% url 'app:report' %}" class="nav-link" data-bs-title="Report">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span class="nav-text">Report</span>
+      </a>
+
+      {% elif user_data.is_student %}
+      <a href="{% url 'student:student' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Dashboard">
+        <i class="bi bi-speedometer2"></i>
+        <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="{% url 'student:training' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Placement Training">
+        <i class="bi bi-journal-bookmark-fill"></i>
+        <span class="nav-text">Placement Training</span>
+      </a>
+
+      {% elif user_data.is_teacher %}
+      <a href="{% url 'teacher:teacher' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Dashboard">
+        <i class="bi bi-speedometer2"></i>
+        <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="{% url 'teacher:approvestudents' %}"
+        class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" data-bs-title="Approve Students">
+        <i class="bi bi-person-check-fill"></i>
+        <span class="nav-text">Approve Students</span>
+      </a>
+      <a href="{% url 'teacher:resume' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Resume">
+        <i class="bi bi-file-earmark-person-fill"></i>
+        <span class="nav-text">Resume</span>
+      </a>
+      <a href="{% url 'teacher:allstudent' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="All Students">
+        <i class="bi bi-people-fill"></i>
+        <span class="nav-text">All Students</span>
+      </a>
+      <a href="{% url 'teacher:alumni' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Alumni">
+        <i class="bi bi-mortarboard"></i>
+        <span class="nav-text">Alumni</span>
+      </a>
+      {% if user_data.user.teacher.all.0.is_placement_faculty %}
+      <a href="{% url 'teacher:training' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Placement Training">
+        <i class="bi bi-journal-bookmark-fill"></i>
+        <span class="nav-text">Placement Training</span>
+      </a>
+      {% endif %}
+      {% if user_data.user.teacher.all.0.is_hod %}
+      <a href="{% url 'teacher:approve_teacher' %}" class="nav-link" data-bs-title="Report">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span class="nav-text">
+          approve teacher
+        </span>
+      </a>
+
+      {% endif %}
+      <a href="{% url 'teacher:report' %}" class="nav-link" data-bs-title="Report">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span class="nav-text">Report</span>
+      </a>
+      {% elif user_data.is_company %}
+      <a href="{% url 'company:company' %}" class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}"
+        data-bs-title="Dashboard">
+        <i class="bi bi-speedometer2"></i>
+        <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="{% url 'company:jobs' %}" class="nav-link {% if request.path == '/jobs/' %}active{% endif %}"
+        data-bs-title="Manage Jobs">
+        <i class="bi bi-briefcase-fill"></i>
+        <span class="nav-text">Manage Jobs</span>
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="
+      {% if user_data.is_principal %}
+      {% url 'app:profile' %}
+      {% elif user_data.is_student %}
+      {% url 'student:profile' %}
+      {% elif user_data.is_teacher %}
+      {% url 'teacher:profile' %}
+      {% elif user_data.is_company %}
+      {% url 'company:profile' %}
+      {%endif%}
+      " class="nav-link {% if request.path == '/profile/' %}active{% endif %}" data-bs-title="Profile">
+        <i class="bi bi-person-circle"></i>
+        <span class="nav-text">Profile</span>
+      </a>
+      <a href="{% url 'app:logout' %}" class="nav-link" data-bs-title="Logout">
+        <i class="bi bi-box-arrow-right"></i>
+        <span class="nav-text">Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div id="content">
+    <!-- Top Bar -->
+    <nav class="top-bar navbar navbar-expand-lg bg-white shadow-sm py-2 px-3">
+      <div class="container-fluid d-flex justify-content-between align-items-center">
+        <!-- Sidebar toggle (mobile only) -->
+        <button class="btn btn-outline-primary d-lg-none" type="button" id="mobileToggle" aria-label="Toggle menu">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+
+        <!-- App/Brand Name -->
+        <a class="navbar-brand fw-semibold text-primary d-none d-lg-block" href="#">
+          <h1 class="h5 mb-0">
+            {% block Main_title %}
+            {% endblock %}
+          </h1>
+        </a>
+
+        <!-- Notification Dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-link position-relative p-2" type="button" id="notificationDropdown"
+            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+            <span class="position-relative d-inline-block">
+              <i class="bi bi-bell fs-5 text-muted"></i>
+              {% if notifications_count > 0 %}
+              <span
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger badge-custom">
+                {{ notifications_count }}
+                <span class="visually-hidden">unread notifications</span>
+              </span>
+              {% endif %}
+            </span>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notificationDropdown"
+            style="width: 360px; max-height: 500px; overflow-y: auto;">
+            <li class="border-bottom">
+              <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                Notifications
+                {% if notifications_count > 0 %}
+                <span class="badge bg-primary rounded-pill">{{ notifications_count }} new</span>
+                {% else %}
+                <span class="badge bg-secondary rounded-pill">No new notifications</span>
+                {% endif %}
+              </h6>
+            </li>
+
+            <!-- Notification Items -->
+            {% if notifications|length > 0 %}
+            {% for notification in notifications|slice:":5" %}
+            <li id="notif-{{ notification.id }}">
+              <a class="dropdown-item d-flex py-3 border-bottom notification-item
+   {% if not notification.is_read %}notification-unread fw-semibold{% else %}notification-read{% endif %}" href="#"
+                hx-post="{% url 'student:mark_notification_read' notification.id %}"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-trigger="mouseenter once"
+                hx-target="#notif-{{ notification.id }}" hx-swap="outerHTML">
+
+                <div class="w-100">
+                  <p class="mb-0 notification-text {% if notification.is_read %}text-muted{% endif %}">
+                    <span class="notification-user">
+                      {% if notification.teacher %}
+                      {{ notification.teacher.user.username }}:
+                      {% elif notification.admin %}
+                      {{ notification.admin.user.username }}:
+                      {% else %}
+                      System Message:
+                      {% endif %}
+                    </span>
+                    <span class="notification-message">
+
+                      {{ notification.message }}
+                    </span>
+                  </p>
+                </div>
+              </a>
+            </li>
+            {% endfor %}
+            {% else %}
+            <li>
+              <a class="dropdown-item d-flex py-3" href="#" style="white-space: normal;">
+                <div class="w-100">
+                  <p class="mb-0 text-muted small text-wrap">No new notifications</p>
+                </div>
+              </a>
+            </li>
+            {% endif %}
+            {% if notifications|length > 0 %}
+            <li class="border-top d-flex">
+              <a class="dropdown-item text-center text-primary py-2" href="#" data-bs-toggle="modal"
+                data-bs-target="#allNotificationsModal">
+                View all notifications
+              </a>
+              <a href="{% url 'app:clear_notifications' %}" class="dropdown-item text-center text-primary py-2">
+                Clear Notifications
+              </a>
+            </li>
+            {% endif %}
+
+
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- All Notifications Modal -->
+    <div class="modal fade" id="allNotificationsModal" tabindex="-1" aria-labelledby="allNotificationsModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="allNotificationsModalLabel">All Notifications</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-0">
+            <div class="notification-modal-list">
+
+              {% for notification in notifications %}
+              <div id="notif-modal-{{ notification.id }}"
+                class="notification-modal-item {% if not notification.is_read %}notification-unread{% else %}notification-read modal-notification-read{% endif %}"
+                {% if not notification.is_read %}
+                hx-post="{% url 'student:mark_notification_read_modal' notification.id %}"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-trigger="mouseenter once"
+                hx-target="#notif-modal-{{ notification.id }}" hx-swap="outerHTML" {% endif %}>
+                <div class="notification-content">
+                  <div class="notification-avatar">
+                    {{ notification.user.username|slice:":1"|upper }}
+                  </div>
+
+                  <div class="notification-body">
+                    <p class="notification-text mb-1">
+                      <span class="notification-user">
+                        {% if notification.teacher %}
+                        {{ notification.teacher.user.username }}:
+                        {% elif notification.admin %}
+                        {{ notification.admin.user.username }}:
+                        {% else %}
+                        System Message:
+                        {% endif %}
+                      </span>
+                      <span class="notification-message">
+                        {{ notification.message }}
+                      </span>
+                    </p>
+                    <span class="notification-meta">
+                      {{ notification.date|timesince }} ago
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+    {% if messages %}
+    {% for message in messages %}
+    {% if messages %}
+    {% for message in messages %}
+    <div id="loginToast" class="toast align-items-center border-0 position-fixed bottom-0 end-0 m-4 
+         {% if message.tags == 'success' %}text-bg-success
+         {% elif message.tags == 'error' or message.tags == 'danger' %}text-bg-danger
+         {% elif message.tags == 'warning' %}text-bg-warning
+         {% elif message.tags == 'info' %}text-bg-info
+         {% else %}text-bg-primary
+         {% endif %}" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ message }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% endfor %}
+    {% endif %}
+
+    <!-- Page Content -->
+    <div class="container-fluid page-content">
+      {% block content %}
+      <!-- Default content if not overridden -->
+      {% endblock %}
+    </div>
+
+    {% if user_data.is_student %}
+      {% include 'student/chatbot.html' %}
+    {% endif %}
+  </div>
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="{% static 'bootstrap.bundle.min.js'%}"></script>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidebar = document.getElementById('sidebar');
+      const content = document.getElementById('content');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const mobileToggle = document.getElementById('mobileToggle');
+
+      // Initialize sidebar state from localStorage
+      const sidebarState = localStorage.getItem('sidebarCollapsed');
+      if (sidebarState === 'true') {
+        sidebar.classList.add('collapsed');
+        toggleBtn.querySelector('i').classList.replace('bi-chevron-left', 'bi-chevron-right');
+      }
+
+      // Toggle sidebar collapse/expand (desktop)
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+          sidebar.classList.toggle('collapsed');
+
+          // Save state to localStorage
+          localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+
+          // Change icon direction
+          const icon = this.querySelector('i');
+          if (sidebar.classList.contains('collapsed')) {
+            icon.classList.replace('bi-chevron-left', 'bi-chevron-right');
+          } else {
+            icon.classList.replace('bi-chevron-right', 'bi-chevron-left');
+          }
+        });
+      }
+
+      // Toggle mobile menu
+      if (mobileToggle) {
+        mobileToggle.addEventListener('click', function () {
+          sidebar.classList.toggle('show');
+        });
+      }
+
+      // Close mobile menu when clicking outside
+      document.addEventListener('click', function (e) {
+        if (window.innerWidth <= 992 &&
+          !sidebar.contains(e.target) &&
+          e.target !== mobileToggle) {
+          sidebar.classList.remove('show');
+        }
+      });
+
+      // Handle window resize
+      function handleResize() {
+        if (window.innerWidth > 992) {
+          sidebar.classList.remove('show');
+        }
+      }
+
+      window.addEventListener('resize', handleResize);
+
+      // Add active class to current page link
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+          link.classList.add('active');
+        }
+      });
+    });
+    window.addEventListener('DOMContentLoaded', (event) => {
+      const toastEl = document.getElementById('loginToast');
+      if (toastEl) {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      }
+    });
+    document.body.addEventListener("htmx:configRequest", (event) => {
+      const token = document.querySelector("meta[name='csrf-token']").content;
+      event.detail.headers['X-CSRFToken'] = token;
+    });
+  </script>
+  {% block extra_js %}
+  {% endblock %}
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+</body>
+
+</html>
